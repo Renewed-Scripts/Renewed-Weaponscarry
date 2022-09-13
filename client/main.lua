@@ -374,7 +374,10 @@ local function removeItems()
           end
 
           if not hasitem or (props[item] and props[item].busy) then
-            DeleteObject(v.handle)
+            print(DoesEntityExist(v.handle))
+            if DoesEntityExist(v.handle) then
+              DeleteObject(v.handle)
+            end
 
             if v.slot then
               PlayerSlots[v.tier][v.slot].isBusy = false
@@ -397,12 +400,9 @@ local function removeItems()
 end
 
 
-local doingCheck = false
 local function DoItemCheck()
   if not FullyLoaded then return end
-  if doingCheck then return end
-  doingCheck = true
-  Wait(math.random(1, 100)) -- When shooting a gun, the event is called HUNDREDS of times, this here is to prevent that from affecting the players MS too much at a time.
+  if IsPedShooting(PlayerPedId()) or IsPlayerFreeAiming(PlayerId()) then return end -- reduces the shooting spamming
   local ped = PlayerPedId()
   local items = PlayerData.items
   itemSlots = {}
@@ -426,9 +426,6 @@ local function DoItemCheck()
   end
 
   removeItems()
-
-  Wait(math.random(1, 100)) -- When shooting a gun, the event is called HUNDREDS of times, this here is to prevent that from affecting the players MS too much at a time.
-  doingCheck = false
 end
 
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
