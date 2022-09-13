@@ -73,7 +73,7 @@ If the prop for some reason do not fit the slot you can add a custom offset by a
 Here's how you add a new item to be Carryable, in this demonstration I used a oil barrel that can be used to whatever you would want or just as a cool prop to hold.
 
 ```lua
-    ["oil_barrel"] = { carry = true, model = "prop_barrel_exp_01a", bone = 28422, x = 0.01, y = -0.27, z =  0.27, xr = 3.0, yr = 0.0, zr = 0.0, blockAttack = true, blockCar = true, blockRun = true},
+    ["oil_barrel"] = { carry = true, model = "prop_barrel_exp_01a", bone = 28422, x = 0.01, y = -0.27, z =  0.27, xr = 3.0, yr = 0.0, zr = 0.0, blockAttack = true, blockCar = true, blockRun = true, dict = "anim@heists@box_carry@", anim = "idle" },
 
     If an item you want to carry then make sure it says carry = true.
     The model is the model of the item you want to carry, in this case I used a oil barrel.
@@ -82,6 +82,8 @@ Here's how you add a new item to be Carryable, in this demonstration I used a oi
     blockAttack = true means that the player will not be able to attack while carrying this item
     blockCar = true means that the player will not be able to get in a vehicle while carrying this item
     blockRun = true means that the player will not be able to run or jump while carrying this item
+    dict = Optional. If not set, will request the default directory
+    anim = Optional. If not set, will play the default animation. If set to "none", will not play an animation.
 ```
 
 
