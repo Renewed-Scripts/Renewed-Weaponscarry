@@ -487,9 +487,8 @@ local function isCarryingObject()
 end exports('isCarryingObject', isCarryingObject)
 
 local function isCarryingAnObject(item)
-    print(items_attatched[props[item].model])
-    if items_attatched[props[item].model] then return true else return false end
-  end exports('isCarryingAnObject', isCarryingAnObject)
+  if items_attatched[props[item].model] then return true else return false end
+end exports('isCarryingAnObject', isCarryingAnObject)
 
 local function GetPlayerCarryItems()
   return items_attatched
