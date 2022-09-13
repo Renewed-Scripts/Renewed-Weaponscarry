@@ -38,6 +38,8 @@ Step 3 and 4 are skippable if you do not use qb-apartments or dont use qb-apartm
 
 7. `exports["Renewed-Weaponscarry"]:removeProp(item)` - Acts as if x item was removed from the player, this DOES NOT work with weapons on back ONLY CARRYABLE items
 
+8. `exports["Renewed-Weaponscarry"]:isCarryingAnObject(item)` - Returns true if the players is carrying a specific item
+
 # How to add new Items
 
 Here's everything you need to know about adding new items to the script
