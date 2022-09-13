@@ -232,12 +232,13 @@ local function doAnim(item)
   if carryingBox then return end -- Only allow the function to be run once at a time
   carryingBox = item
   local ped = PlayerPedId()
+  local dict, anim = props[items].dict or 'anim@heists@box_carry@', props[item].anim or 'idle'
 
-  requestAnimDict('anim@heists@box_carry@')
+  requestAnimDict(dict)
   CreateThread(function()
     while carryingBox do
-      if not IsEntityPlayingAnim(ped, "anim@heists@box_carry@", "idle", 3) then
-        TaskPlayAnim(ped, "anim@heists@box_carry@", "idle", 8.0, -8, -1, 49, 0, 0, 0, 0)
+      if not anim == 'none' and not IsEntityPlayingAnim(ped, dict, anim, 3) then
+        TaskPlayAnim(ped, dict, anim, 8.0, -8, -1, 49, 0, 0, 0, 0)
       end
 
       if props[carryingBox].blockAttack then
