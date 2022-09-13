@@ -486,6 +486,10 @@ local function isCarryingObject()
   return carryingBox ~= nil and true or false
 end exports('isCarryingObject', isCarryingObject)
 
+local function isCarryingAnObject(item)
+  if items_attatched[props[item].model] then return true else return false end
+end exports('isCarryingAnObject', isCarryingAnObject)
+
 local function GetPlayerCarryItems()
   return items_attatched
 end exports('GetPlayerCarryItems', GetPlayerCarryItems)
