@@ -374,7 +374,6 @@ local function removeItems()
           end
 
           if not hasitem or (props[item] and props[item].busy) then
-            print(DoesEntityExist(v.handle))
             if DoesEntityExist(v.handle) then
               DeleteObject(v.handle)
             end
