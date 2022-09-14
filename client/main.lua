@@ -237,7 +237,7 @@ local function doAnim(item)
   requestAnimDict(dict)
   CreateThread(function()
     while carryingBox do
-      if not anim == 'none' and not IsEntityPlayingAnim(ped, dict, anim, 3) then
+      if not anim == 'none' or not IsEntityPlayingAnim(ped, dict, anim, 3) then
         TaskPlayAnim(ped, dict, anim, 8.0, -8, -1, 49, 0, 0, 0, 0)
       end
 
