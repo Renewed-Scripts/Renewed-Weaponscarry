@@ -233,11 +233,12 @@ local function doAnim(item)
   carryingBox = item
   local ped = PlayerPedId()
   local dict, anim = props[items].dict or 'anim@heists@box_carry@', props[item].anim or 'idle'
+  if anim == 'none' then return end
 
   requestAnimDict(dict)
   CreateThread(function()
     while carryingBox do
-      if not anim == 'none' and not IsEntityPlayingAnim(ped, dict, anim, 3) then
+      if not IsEntityPlayingAnim(ped, dict, anim, 3) then
         TaskPlayAnim(ped, dict, anim, 8.0, -8, -1, 49, 0, 0, 0, 0)
       end
 
