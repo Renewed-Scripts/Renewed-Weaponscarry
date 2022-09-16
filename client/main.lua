@@ -227,13 +227,12 @@ local function requestAnimDict(animDict)
 end
 
 
--- Should probably allow for different animations for different items down the line --
 local function doAnim(item)
   if carryingBox then return end -- Only allow the function to be run once at a time
   carryingBox = item
   local ped = PlayerPedId()
-  local dict, anim = props[items].dict or 'anim@heists@box_carry@', props[item].anim or 'idle'
-  if anim == 'none' then return end
+  local dict, anim = props[item].dict or 'anim@heists@box_carry@', props[item].anim or 'idle'
+  if not anim or not dict then return end
 
   requestAnimDict(dict)
   CreateThread(function()
