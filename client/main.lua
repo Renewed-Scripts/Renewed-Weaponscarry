@@ -78,7 +78,7 @@ local props = {
   ["coffeemaker"]               = { carry = true,   model = "prop_coffee_mac_02",     bone = 24817, x = 0.00,   y = 0.43, z = 0.05, xr = 91.0,  yr = 0.0,    zr = -265.0, blockAttack = true, blockCar = true, blockRun = true},
   ["musicequipment"]            = { carry = true,   model = "prop_speaker_06",        bone = 24817, x = 0.00,   y = 0.43, z = 0.05, xr = 91.0,  yr = 0.0,    zr = -265.0, blockAttack = true, blockCar = true, blockRun = true},
   ["microwave"]                 = { carry = true,   model = "prop_microwave_1",       bone = 24817, x = -0.20,  y = 0.43, z = 0.05, xr = 91.0,  yr = 0.0,    zr = -265.0, blockAttack = true, blockCar = true, blockRun = true},
-
+  ["oil_barrel"] = { carry = true, model = "prop_barrel_exp_01a", bone = 28422, x = 0.01, y = -0.27, z =  0.27, xr = 3.0, yr = 0.0, zr = 0.0, blockAttack = true, blockCar = true, blockRun = true}
 }
 
 local items_attatched = {}
@@ -90,12 +90,14 @@ local PlayerData = QBCore.Functions.GetPlayerData()
 local FullyLoaded = LocalPlayer.state.isLoggedIn
 
 
-
+-- Added timeout incase that you gave an icorrect hash or something and it dosnt infinte load --
 local function loadmodel(hash)
-  if HasModelLoaded(hash) then return end
 	RequestModel(hash)
+  local timedOut = 0
   while not HasModelLoaded(hash) do
-    Wait(0)
+    if timedOut == 10 then break end
+    timedOut += 1
+    Wait(100)
   end
 end
 
@@ -181,8 +183,6 @@ local function AttachWeapon(attachModel,modelHash, tier, item)
   local x, y, z, xr, yr, zr = calcOffsets(v.x, v.y, v.z, v.xr, v.yr, v.zr, item)
 
 	AttachEntityToEntity(items_attatched[attachModel].handle, PlayerPedId(), bone, x, y, z, xr, yr, zr, 1, 1, 0, 0, 2, 1)
-  SetModelAsNoLongerNeeded(hash)
-  SetEntityCompletelyDisableCollision(items_attatched[attachModel].handle, false, true)
 end
 
 local WeapDelete = false
@@ -201,14 +201,15 @@ local function DeleteWeapon(item)
 
   if items_attatched[item] then
 
-    DeleteObject(items_attatched[item].handle)
+    if DoesEntityExist(items_attatched[item].handle) then
+      DeleteObject(items_attatched[item].handle)
+    end
 
     if items_attatched[item].slot then
       PlayerSlots[items_attatched[item].tier][items_attatched[item].slot].isBusy = false
     end
 
     items_attatched[item] = nil
-
   end
   WeapDelete = false
 end
@@ -227,17 +228,17 @@ local function requestAnimDict(animDict)
 end
 
 
--- Should probably allow for different animations for different items down the line --
 local function doAnim(item)
   if carryingBox then return end -- Only allow the function to be run once at a time
   carryingBox = item
   local ped = PlayerPedId()
-  local dict, anim = props[items].dict or 'anim@heists@box_carry@', props[item].anim or 'idle'
+  local dict, anim = props[item].dict or 'anim@heists@box_carry@', props[item].anim or 'idle'
+  if not anim or not dict then return end
 
   requestAnimDict(dict)
   CreateThread(function()
     while carryingBox do
-      if not anim == 'none' and not IsEntityPlayingAnim(ped, dict, anim, 3) then
+      if not IsEntityPlayingAnim(ped, dict, anim, 3) then
         TaskPlayAnim(ped, dict, anim, 8.0, -8, -1, 49, 0, 0, 0, 0)
       end
 
@@ -273,6 +274,7 @@ end
 
 
 
+
 local function AttatchProp(item)
   if carryingBox then return end
   local ped = PlayerPedId()
@@ -290,8 +292,6 @@ local function AttatchProp(item)
 
   local x, y, z, xr, yr, zr = props[item].x,props[item].y,props[item].z,props[item].xr,props[item].yr,props[item].zr
   AttachEntityToEntity(items_attatched[attachModel].handle, ped, bone, x, y, z, xr, yr, zr, 1, 1, 0, 0, 2, 1)
-  SetModelAsNoLongerNeeded(hash)
-  SetEntityCompletelyDisableCollision(items_attatched[attachModel].handle, false, true)
   doAnim(item)
 end
 
@@ -345,8 +345,6 @@ local function AttatchChain(attachModel, modelHash, tier, item)
   local x, y, z, xr, yr, zr = calcOffsets(v.x, v.y, v.z, v.xr, v.yr, v.zr, item)
 
 	AttachEntityToEntity(items_attatched[attachModel].handle, PlayerPedId(), bone, x, y, z, xr, yr, zr, 1, 1, 0, 0, 2, 1)
-  SetModelAsNoLongerNeeded(modelHash)
-  SetEntityCompletelyDisableCollision(items_attatched[attachModel].handle, false, true)
 end
 
 
@@ -434,7 +432,9 @@ local function toggleProps()
     if items_attatched then
       for k, v in pairs(items_attatched) do
 
-        DeleteObject(v.handle)
+        if DoesEntityExist(v.handle) then
+          DeleteObject(v.handle)
+        end
 
         if v.slot then
           PlayerSlots[v.tier][v.slot].isBusy = false
@@ -458,7 +458,9 @@ local function toggleProps()
       if items_attatched then
         for k, v in pairs(items_attatched) do
 
-          DeleteObject(v.handle)
+          if DoesEntityExist(v.handle) then
+            DeleteObject(v.handle)
+          end
 
           if v.slot then
             PlayerSlots[v.tier][v.slot].isBusy = false
@@ -494,7 +496,9 @@ local function refreshProps()
   if not FullyLoaded then return end
   if items_attatched then
     for k, v in pairs(items_attatched) do
-      DeleteObject(v.handle)
+      if DoesEntityExist(v.handle) then
+        DeleteObject(v.handle)
+      end
 
       if v.slot then
         PlayerSlots[v.tier][v.slot].isBusy = false
@@ -514,6 +518,22 @@ local function refreshProps()
 
   DoItemCheck()
 end exports('refreshProps', refreshProps)
+
+local function refreshPlayer()
+  if not FullyLoaded then return end
+	for _, v in pairs(GetGamePool('CObject')) do
+		if IsEntityAttachedToEntity(PlayerPedId(), v) then
+			DetachEntity(v, 0, 0)
+			DeleteEntity(v)
+		end
+	end
+
+  for k, _ in pairs(items_attatched) do
+    items_attatched[k] = nil
+  end
+
+  DoItemCheck()
+end exports('refreshPlayer', refreshPlayer)
 
 local function makeObjectBusy(item, state)
   if not FullyLoaded then return end
@@ -571,7 +591,9 @@ end)
 AddEventHandler('onResourceStop', function(resource)
    if resource == GetCurrentResourceName() then
     for key, attached_object in pairs(items_attatched) do
-      DeleteObject(attached_object.handle)
+      if DoesEntityExist(attached_object.handle) then
+        DeleteObject(attached_object.handle)
+      end
       items_attatched[key] = nil
     end
    end
