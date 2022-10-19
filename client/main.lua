@@ -517,25 +517,17 @@ RegisterNetEvent('weapons:client:SetCurrentWeapon', function(data)
         end
     elseif not data and LocalPlayer.state.isLoggedIn then
         Wait(1000)
-        
-        if not override then
-            DoItemCheck()
-        elseif override and PlayerData.metadata.inside.apartment.apartmentId then
-            DoItemCheck()
-        end
+        if not override then DoItemCheck() elseif override and PlayerData.metadata.inside.apartment.apartmentId then DoItemCheck() end
     end
 end)
 
 -- Handles state right when the player selects their character and location.
 RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function()
+    while not DoesEntityExist(PlayerPedId()) do Wait(25) end
     PlayerData = QBCore.Functions.GetPlayerData()
     FullyLoaded = true
     Wait(250)
-    if not override then
-        DoItemCheck()
-    elseif override and PlayerData.metadata.inside.apartment.apartmentId then
-        DoItemCheck()
-    end
+    if not override then DoItemCheck() elseif override and PlayerData.metadata.inside.apartment.apartmentId then DoItemCheck() end
 end)
 
 -- Resets state on logout, in case of character change.
@@ -548,11 +540,7 @@ end)
 RegisterNetEvent('QBCore:Player:SetPlayerData', function(val)
     PlayerData = val
     Wait(50)
-    if not override then
-        DoItemCheck()
-    elseif override and PlayerData.metadata.inside.apartment.apartmentId then
-        DoItemCheck()
-    end
+    if not override then DoItemCheck() elseif override and PlayerData.metadata.inside.apartment.apartmentId then DoItemCheck() end
 end)
 
 -- Handles state if resource is restarted live.
