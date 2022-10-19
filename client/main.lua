@@ -523,7 +523,7 @@ end)
 
 -- Handles state right when the player selects their character and location.
 RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function()
-    while not DoesEntityExist(PlayerPedId()) do Wait(25) end
+    Wait(20000)
     PlayerData = QBCore.Functions.GetPlayerData()
     FullyLoaded = true
     Wait(250)
