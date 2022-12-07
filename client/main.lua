@@ -271,8 +271,6 @@ local function doAnim(item)
   end)
 end
 
-
-
 local function AttatchProp(item)
   if carryingBox then return end
   local ped = PlayerPedId()
@@ -396,11 +394,12 @@ local function removeItems()
   end
 end
 
-
+local PlayerId = PlayerId()
 local doingCheck = false
 local function DoItemCheck()
   if not FullyLoaded then return end
   if doingCheck then return end
+  if IsPedShooting(ped) or IsPlayerFreeAiming(PlayerId) then return end -- reduces the shooting spamming
   doingCheck = true
   Wait(math.random(1, 100)) -- When shooting a gun, the event is called HUNDREDS of times, this here is to prevent that from affecting the players MS too much at a time.
   local ped = PlayerPedId()
@@ -408,6 +407,7 @@ local function DoItemCheck()
   itemSlots = {}
   if items then
     for _, item in pairs(items) do
+      item.name = item.name:lower()
       if item and item.name and props and props[item.name] and not itemSlots[item.name] then
         itemSlots[item.name] = props[item.name]
         if props[item.name].carry then
@@ -530,6 +530,20 @@ end exports('makeObjectBusy', makeObjectBusy)
 
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- ** GENERIC EVENTS ** --
+AddEventHandler('ox_inventory:currentWeapon', function(data)
+  if not FullyLoaded then return end
+  if override then return end
+  if data then
+    data.name = data.name:lower()
+    if props[data.name] and items_attatched[props[data.name].model] then
+      DeleteWeapon(props[data.name].model)
+    end
+  else
+    Wait(1000)
+    DoItemCheck()
+  end
+end)
+
 RegisterNetEvent('weapons:client:SetCurrentWeapon', function(data)
   if data and LocalPlayer.state.isLoggedIn then
     if props[data.name] and items_attatched[props[data.name].model] then
