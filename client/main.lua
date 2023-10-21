@@ -110,7 +110,7 @@ local function AttachWeapon(attachModel, modelHash, tier, item)
 	if not slot then return end
 
 	local v = PlayerSlots[tier][slot]
-	local bone = GetPedBoneIndex(PlayerPedId(), v.bone)
+	local bone = GetPedBoneIndex(cache.ped, v.bone)
 
 	lib.requestModel(hash)
 
@@ -123,20 +123,19 @@ local function AttachWeapon(attachModel, modelHash, tier, item)
 
 	local x, y, z, xr, yr, zr = calcOffsets(v.x, v.y, v.z, v.xr, v.yr, v.zr, item)
 
-	AttachEntityToEntity(items_attatched[attachModel].handle, PlayerPedId(), bone, x, y, z, xr, yr, zr, 1, 1, 0, 0, 2, 1)
+	AttachEntityToEntity(items_attatched[attachModel].handle, cache.ped, bone, x, y, z, xr, yr, zr, 1, 1, 0, 0, 2, 1)
 	SetModelAsNoLongerNeeded(hash)
 	SetEntityCompletelyDisableCollision(items_attatched[attachModel].handle, false, true)
 end
 
 local WeapDelete = false
 local function DeleteWeapon(item)
-	local ped = PlayerPedId()
 	local hash = items_attatched[item].hash
 	if WeapDelete then return end
 
 	WeapDelete = true
 	local wait = 0 -- if above 3 seconds then return this function
-	while GetSelectedPedWeapon(ped) ~= hash do
+	while GetSelectedPedWeapon(cache.ped) ~= hash do
 		Wait(100)
 		wait = wait + 1
 		if wait >= 30 then return end -- If they figure out a way to spam then this we just return the function
@@ -167,12 +166,11 @@ local function AttatchChain(attachModel, modelHash, tier, item)
 	if not slot then return end
 
 	local v = PlayerSlots[tier][slot]
-	local bone = GetPedBoneIndex(PlayerPedId(), v.bone)
+	local bone = GetPedBoneIndex(cache.ped, v.bone)
 
-	loadmodel(modelHash)
+	lib.requestModel(modelHash)
 
-	ClearPedTasks(PlayerPedId())
-
+	ClearPedTasks(cache.ped)
 
 	items_attatched[attachModel] = {
 		hash = modelHash,
@@ -184,7 +182,7 @@ local function AttatchChain(attachModel, modelHash, tier, item)
 
 	local x, y, z, xr, yr, zr = calcOffsets(v.x, v.y, v.z, v.xr, v.yr, v.zr, item)
 
-	AttachEntityToEntity(items_attatched[attachModel].handle, PlayerPedId(), bone, x, y, z, xr, yr, zr, 1, 1, 0, 0, 2, 1)
+	AttachEntityToEntity(items_attatched[attachModel].handle, cache.ped, bone, x, y, z, xr, yr, zr, 1, 1, 0, 0, 2, 1)
 	SetModelAsNoLongerNeeded(modelHash)
 	SetEntityCompletelyDisableCollision(items_attatched[attachModel].handle, false, true)
 end
@@ -206,24 +204,22 @@ local function removeItems()
 			local hasitem = false
 			local item = getItemByhash(v.hash)
 			if item then
-				if tempBox ~= item then
-					if itemSlots[item] then
-						hasitem = true
+				if itemSlots[item] then
+					hasitem = true
+				end
+
+				if not hasitem or (props[item] and props[item].busy) then
+					DeleteObject(v.handle)
+
+					if v.slot then
+						PlayerSlots[v.tier][v.slot].isBusy = false
 					end
 
-					if not hasitem or (props[item] and props[item].busy) then
-						DeleteObject(v.handle)
-
-						if v.slot then
-							PlayerSlots[v.tier][v.slot].isBusy = false
-						end
-
-						if v.chain then
-							carryingChain = nil
-						end
-
-						items_attatched[k] = nil
+					if v.chain then
+						carryingChain = nil
 					end
+
+					items_attatched[k] = nil
 				end
 			end
 		end
@@ -235,10 +231,9 @@ local doingCheck = false
 local function DoItemCheck()
 	if not FullyLoaded then return end
 	if doingCheck then return end
-	if IsPedShooting(ped) or IsPlayerFreeAiming(PlayerId) then return end -- reduces the shooting spamming
+	if IsPedShooting(cache.ped) or IsPlayerFreeAiming(PlayerId) then return end -- reduces the shooting spamming
 	doingCheck = true
 	Wait(math.random(1, 100)) -- When shooting a gun, the event is called HUNDREDS of times, this here is to prevent that from affecting the players MS too much at a time.
-	local ped = PlayerPedId()
 	local items = PlayerData.items
 	itemSlots = {}
 	if items then
@@ -250,7 +245,7 @@ local function DoItemCheck()
 					if not carryingChain then
 						AttatchChain(props[item.name].model, props[item.name].hash, props[item.name].tier, item.name)
 					end
-				elseif not items_attatched[props[item.name].model] and GetSelectedPedWeapon(ped) ~= props[item.name].hash and
+				elseif not items_attatched[props[item.name].model] and GetSelectedPedWeapon(cache.ped) ~= props[item.name].hash and
 					getFreeSlot(props[item.name].tier) >= 1 then
 					AttachWeapon(props[item.name].model, props[item.name].hash, props[item.name].tier, item.name)
 				end
