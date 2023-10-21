@@ -5,7 +5,7 @@ local QBCore = exports['qb-core']:GetCoreObject()
   This means that instead of giving each weapon a designated slot on the back, we can just add a weapon with the designated slot
   This will also allow for weapons to feel and look more natural when added.
 
-  All items that go on your back -> MUST have a SLOT CATEGORY, everything that we CARRY must have Carry = true
+  All items that go on your back -> MUST have a SLOT CATEGORY
 ]]
 local PlayerSlots = {
 	[1] = { -- Bigger weapons such as bats, crowbars, Assaultrifles, and also good place for wet weed.
@@ -35,57 +35,7 @@ local PlayerSlots = {
 	},
 }
 
-
-
--- Add your items here --
-local props = {
-	---- ** Drugs ** ----
-	-- Weed
-	["wetbud"] = { model = "bkr_prop_weed_drying_02a", hash = joaat("bkr_prop_weed_drying_02a"), tier = 1, yr = 90.0 }, -- This is more of an item that deserves a
-
-	-- meth
-	["meth"] = { model = "hei_prop_pill_bag_01", hash = joaat("hei_prop_pill_bag_01"), tier = 3 },
-
-	-- Contraband
-	["markedbills"] = { model = "prop_money_bag_01", hash = joaat("prop_money_bag_01"), tier = 3, x = -0.47, zr = 0 }, -- If you put any x,y,z,xr,yr,zr it will offset it from the slots to make it fit perfectly
-
-	-- Custom Weapons Tier 1
-	["weapon_assaultrifle"]  = { model = "w_ar_assaultrifle", hash = joaat("weapon_assaultrifle"), tier = 1 },
-	["weapon_carbinerifle"]  = { model = "w_ar_carbinerifle", hash = joaat("weapon_carbinerifle"), tier = 1 },
-	["weapon_advancedrifle"] = { model = "w_ar_advancedrifle", hash = joaat("weapon_advancedrifle"), tier = 1 },
-	["weapon_combatpdw"]     = { model = "w_sb_mpx", hash = joaat("weapon_combatpdw"), tier = 1 },
-	["weapon_compactrifle"]  = { model = "w_ar_draco", hash = joaat("weapon_compactrifle"), tier = 1 },
-	["weapon_m4"]            = { model = "w_ar_m4", hash = joaat("weapon_m4"), tier = 1 },
-
-
-	-- tier2
-	["weapon_bats"]      = { model = "w_me_baseball_bat_barbed", hash = joaat("weapon_bats"), tier = 2 },
-	["weapon_katana"]    = { model = "katana_sheath", hash = joaat("weapon_katana"), tier = 2, zr = -90.0, xr = -40.0,
-		y = -0.14, x = 0.2, z = -0.08 },
-	["weapon_golfclub"]  = { model = "w_me_gclub", hash = joaat("weapon_golfclub"), tier = 2 },
-	["weapon_battleaxe"] = { model = "w_me_battleaxe", hash = joaat("weapon_battleaxe"), tier = 2 },
-	["weapon_crowbar"]   = { model = "w_me_crowbar", hash = joaat("weapon_crowbar"), tier = 2 },
-	["weapon_wrench"]    = { model = "w_me_wrench", hash = joaat("weapon_wrench"), tier = 2 },
-
-	-- These Utilize the NoPixel pelts from their packages get them here: https://3dstore.nopixel.net/package/5141816 --
-	["deer_pelt_1"] = { model = "hunting_pelt_01_a", hash = joaat("hunting_pelt_01_a"), tier = 4 },
-	["deer_pelt_2"] = { model = "hunting_pelt_01_b", hash = joaat("hunting_pelt_01_b"), tier = 4 },
-	["deer_pelt_3"] = { model = "hunting_pelt_01_c", hash = joaat("hunting_pelt_01_c"), tier = 4 },
-
-
-	-- I use these for my house robbery when they steal the objects --
-	["telescope"]      = { carry = true, model = "prop_t_telescope_01b", bone = 24817, x = -0.23, y = 0.43, z = 0.05,
-		xr = -10.0, yr = 93.0, zr = 0.0, blockAttack = true, blockCar = true, blockRun = true, },
-	["pcequipment"]    = { carry = true, model = "prop_dyn_pc_02", bone = 24817, x = 0.09, y = 0.43, z = 0.05, xr = 91.0,
-		yr = 0.0, zr = -265.0, blockAttack = true, blockCar = true, blockRun = true },
-	["coffeemaker"]    = { carry = true, model = "prop_coffee_mac_02", bone = 24817, x = 0.00, y = 0.43, z = 0.05,
-		xr = 91.0, yr = 0.0, zr = -265.0, blockAttack = true, blockCar = true, blockRun = true },
-	["musicequipment"] = { carry = true, model = "prop_speaker_06", bone = 24817, x = 0.00, y = 0.43, z = 0.05, xr = 91.0,
-		yr = 0.0, zr = -265.0, blockAttack = true, blockCar = true, blockRun = true },
-	["microwave"]      = { carry = true, model = "prop_microwave_1", bone = 24817, x = -0.20, y = 0.43, z = 0.05, xr = 91.0,
-		yr = 0.0, zr = -265.0, blockAttack = true, blockCar = true, blockRun = true },
-
-}
+local props = Config.itemProps
 
 local items_attatched = {}
 local itemSlots = {}
@@ -95,19 +45,8 @@ local PlayerData = QBCore.Functions.GetPlayerData()
 
 local FullyLoaded = LocalPlayer.state.isLoggedIn
 
-
-
-local function loadmodel(hash)
-	if HasModelLoaded(hash) then return end
-	RequestModel(hash)
-	while not HasModelLoaded(hash) do
-		Wait(0)
-	end
-end
-
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- ** Weapon Functions ** --
-
 
 local function getFreeSlot(tier)
 	local amount = 0
@@ -173,7 +112,7 @@ local function AttachWeapon(attachModel, modelHash, tier, item)
 	local v = PlayerSlots[tier][slot]
 	local bone = GetPedBoneIndex(PlayerPedId(), v.bone)
 
-	loadmodel(hash)
+	lib.requestModel(hash)
 
 	items_attatched[attachModel] = {
 		hash = modelHash,
@@ -218,110 +157,6 @@ local function DeleteWeapon(item)
 end
 
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-local carryingBox = nil
-
-local function requestAnimDict(animDict)
-	if not HasAnimDictLoaded(animDict) then
-		RequestAnimDict(animDict)
-
-		while not HasAnimDictLoaded(animDict) do
-			Wait(0)
-		end
-	end
-end
-
-local function doAnim(item)
-	if carryingBox then return end -- Only allow the function to be run once at a time
-	carryingBox = item
-	local ped = PlayerPedId()
-	local dict, anim = props[item].dict or 'anim@heists@box_carry@', props[item].anim or 'idle'
-	if not anim or not dict then return end
-
-	requestAnimDict(dict)
-	CreateThread(function()
-		while carryingBox do
-			if not IsEntityPlayingAnim(ped, dict, anim, 3) then
-				TaskPlayAnim(ped, dict, anim, 8.0, -8, -1, 49, 0, 0, 0, 0)
-			end
-
-			if props[carryingBox].blockAttack then
-				DisableControlAction(0, 24, true) -- disable attack
-				DisableControlAction(0, 25, true) -- disable aim
-				DisableControlAction(0, 47, true) -- disable weapon
-				DisableControlAction(0, 58, true) -- disable weapon
-				DisableControlAction(0, 263, true) -- disable melee
-				DisableControlAction(0, 264, true) -- disable melee
-				DisableControlAction(0, 257, true) -- disable melee
-				DisableControlAction(0, 140, true) -- disable melee
-				DisableControlAction(0, 141, true) -- disable melee
-				DisableControlAction(0, 142, true) -- disable melee
-				DisableControlAction(0, 143, true) -- disable melee
-			end
-
-			if props[carryingBox].blockCar and IsPedGettingIntoAVehicle(ped) then
-				ClearPedTasksImmediately(ped) -- Stops all tasks for the ped
-			end
-
-			if props[carryingBox].blockRun then
-				DisableControlAction(0, 22, true) -- disable jumping
-				DisableControlAction(0, 21, true) -- disable sprinting
-			end
-
-			Wait(1)
-		end
-
-		ClearPedTasks(ped)
-	end)
-end
-
-local function AttatchProp(item)
-	if carryingBox then return end
-	local ped = PlayerPedId()
-	local attachModel = props[item].model
-	local hash = joaat(props[item].model)
-	local bone = GetPedBoneIndex(ped, props[item].bone)
-	SetCurrentPedWeapon(ped, 0xA2719263)
-	loadmodel(hash)
-
-	items_attatched[attachModel] = {
-		hash = hash,
-		handle = CreateObject(attachModel, 1.0, 1.0, 1.0, true, true, false),
-		carry = true
-	}
-
-	local x, y, z, xr, yr, zr = props[item].x, props[item].y, props[item].z, props[item].xr, props[item].yr, props[item].zr
-	AttachEntityToEntity(items_attatched[attachModel].handle, ped, bone, x, y, z, xr, yr, zr, 1, 1, 0, 0, 2, 1)
-	SetModelAsNoLongerNeeded(hash)
-	SetEntityCompletelyDisableCollision(items_attatched[attachModel].handle, false, true)
-	doAnim(item)
-end
-
-local tempBox = nil
-
--- Exports to trick the script into thinking we got an item we can carry --
-local function carryProp(item)
-	if not item then return print("ITEM NOT DEFINED") end
-	if not props[item] then return print("ITEM NOT REGISTERED IN THE CONFIG") end
-	if carryingBox then return print("PED IS ALREADY CARRYING AN OBJECT") end
-	tempBox = item
-	AttatchProp(item)
-end
-
-exports('carryProp', carryProp)
-
-local function removeProp(item)
-	if not item then return print("ITEM NOT DEFINED") end
-	if not props[item] then return print("ITEM NOT REGISTERED IN THE CONFIG") end
-	if carryingBox ~= item then return print("Item is not whats being carried...") end
-	DeleteObject(items_attatched[props[item].model].handle)
-	items_attatched[props[item].model] = nil
-	carryingBox = nil
-	tempBox = nil
-end
-
-exports('removeProp', removeProp)
-
-
 
 local carryingChain = nil
 
@@ -387,10 +222,6 @@ local function removeItems()
 							carryingChain = nil
 						end
 
-						if v.carry then
-							carryingBox = nil
-						end
-
 						items_attatched[k] = nil
 					end
 				end
@@ -415,11 +246,7 @@ local function DoItemCheck()
 			item.name = item.name:lower()
 			if item and item.name and props and props[item.name] and not itemSlots[item.name] then
 				itemSlots[item.name] = props[item.name]
-				if props[item.name].carry then
-					if not carryingBox then
-						AttatchProp(item.name)
-					end
-				elseif props[item.name].chain then
+				if props[item.name].chain then
 					if not carryingChain then
 						AttatchChain(props[item.name].model, props[item.name].hash, props[item.name].tier, item.name)
 					end
@@ -450,10 +277,6 @@ local function toggleProps()
 					PlayerSlots[v.tier][v.slot].isBusy = false
 				end
 
-				if v.carry then
-					carryingBox = nil
-				end
-
 				if v.chain then
 					carryingChain = nil
 				end
@@ -474,10 +297,6 @@ local function toggleProps()
 					PlayerSlots[v.tier][v.slot].isBusy = false
 				end
 
-				if v.carry then
-					carryingBox = nil
-				end
-
 				if v.chain then
 					carryingChain = nil
 				end
@@ -489,12 +308,6 @@ local function toggleProps()
 end
 
 exports("toggleProps", toggleProps)
-
-local function isCarryingObject()
-	return carryingBox ~= nil and true or false
-end
-
-exports('isCarryingObject', isCarryingObject)
 
 local function isCarryingAnObject(item)
 	if items_attatched[props[item].model] then return true else return false end
@@ -516,10 +329,6 @@ local function refreshProps()
 
 			if v.slot then
 				PlayerSlots[v.tier][v.slot].isBusy = false
-			end
-
-			if v.carry then
-				carryingBox = nil
 			end
 
 			if v.chain then
