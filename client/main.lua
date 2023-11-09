@@ -37,7 +37,7 @@ local PlayerSlots = {
 
 local props = Config.itemProps
 
-local items_attatched = {}
+local items_attached = {}
 local itemSlots = {}
 local override = false
 
@@ -110,11 +110,11 @@ local function AttachWeapon(attachModel, modelHash, tier, item)
 	if not slot then return end
 
 	local v = PlayerSlots[tier][slot]
-	local bone = GetPedBoneIndex(PlayerPedId(), v.bone)
+	local bone = GetPedBoneIndex(cache.ped, v.bone)
 
 	lib.requestModel(hash)
 
-	items_attatched[attachModel] = {
+	items_attached[attachModel] = {
 		hash = modelHash,
 		handle = CreateObject(attachModel, 1.0, 1.0, 1.0, true, true, false),
 		slot = slot,
@@ -123,34 +123,33 @@ local function AttachWeapon(attachModel, modelHash, tier, item)
 
 	local x, y, z, xr, yr, zr = calcOffsets(v.x, v.y, v.z, v.xr, v.yr, v.zr, item)
 
-	AttachEntityToEntity(items_attatched[attachModel].handle, PlayerPedId(), bone, x, y, z, xr, yr, zr, 1, 1, 0, 0, 2, 1)
+	AttachEntityToEntity(items_attached[attachModel].handle, cache.ped, bone, x, y, z, xr, yr, zr, 1, 1, 0, 0, 2, 1)
 	SetModelAsNoLongerNeeded(hash)
-	SetEntityCompletelyDisableCollision(items_attatched[attachModel].handle, false, true)
+	SetEntityCompletelyDisableCollision(items_attached[attachModel].handle, false, true)
 end
 
 local WeapDelete = false
 local function DeleteWeapon(item)
-	local ped = PlayerPedId()
-	local hash = items_attatched[item].hash
+	local hash = items_attached[item].hash
 	if WeapDelete then return end
 
 	WeapDelete = true
 	local wait = 0 -- if above 3 seconds then return this function
-	while GetSelectedPedWeapon(ped) ~= hash do
+	while GetSelectedPedWeapon(cache.ped) ~= hash do
 		Wait(100)
 		wait = wait + 1
 		if wait >= 30 then return end -- If they figure out a way to spam then this we just return the function
 	end
 
-	if items_attatched[item] then
+	if items_attached[item] then
 
-		DeleteObject(items_attatched[item].handle)
+		DeleteObject(items_attached[item].handle)
 
-		if items_attatched[item].slot then
-			PlayerSlots[items_attatched[item].tier][items_attatched[item].slot].isBusy = false
+		if items_attached[item].slot then
+			PlayerSlots[items_attached[item].tier][items_attached[item].slot].isBusy = false
 		end
 
-		items_attatched[item] = nil
+		items_attached[item] = nil
 
 	end
 	WeapDelete = false
@@ -160,21 +159,20 @@ end
 
 local carryingChain = nil
 
-local function AttatchChain(attachModel, modelHash, tier, item)
+local function AttachChain(attachModel, modelHash, tier, item)
 	if carryingChain then return end
 	carryingChain = attachModel
 	local slot = UseSlot(tier)
 	if not slot then return end
 
 	local v = PlayerSlots[tier][slot]
-	local bone = GetPedBoneIndex(PlayerPedId(), v.bone)
+	local bone = GetPedBoneIndex(cache.ped, v.bone)
 
-	loadmodel(modelHash)
+	lib.requestModel(modelHash)
 
-	ClearPedTasks(PlayerPedId())
+	ClearPedTasks(cache.ped)
 
-
-	items_attatched[attachModel] = {
+	items_attached[attachModel] = {
 		hash = modelHash,
 		handle = CreateObject(attachModel, 1.0, 1.0, 1.0, true, true, false),
 		slot = slot,
@@ -184,9 +182,9 @@ local function AttatchChain(attachModel, modelHash, tier, item)
 
 	local x, y, z, xr, yr, zr = calcOffsets(v.x, v.y, v.z, v.xr, v.yr, v.zr, item)
 
-	AttachEntityToEntity(items_attatched[attachModel].handle, PlayerPedId(), bone, x, y, z, xr, yr, zr, 1, 1, 0, 0, 2, 1)
+	AttachEntityToEntity(items_attached[attachModel].handle, cache.ped, bone, x, y, z, xr, yr, zr, 1, 1, 0, 0, 2, 1)
 	SetModelAsNoLongerNeeded(modelHash)
-	SetEntityCompletelyDisableCollision(items_attatched[attachModel].handle, false, true)
+	SetEntityCompletelyDisableCollision(items_attached[attachModel].handle, false, true)
 end
 
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -201,29 +199,27 @@ local function getItemByhash(hash)
 end
 
 local function removeItems()
-	if items_attatched then
-		for k, v in pairs(items_attatched) do
+	if items_attached then
+		for k, v in pairs(items_attached) do
 			local hasitem = false
 			local item = getItemByhash(v.hash)
 			if item then
-				if tempBox ~= item then
-					if itemSlots[item] then
-						hasitem = true
+				if itemSlots[item] then
+					hasitem = true
+				end
+
+				if not hasitem or (props[item] and props[item].busy) then
+					DeleteObject(v.handle)
+
+					if v.slot then
+						PlayerSlots[v.tier][v.slot].isBusy = false
 					end
 
-					if not hasitem or (props[item] and props[item].busy) then
-						DeleteObject(v.handle)
-
-						if v.slot then
-							PlayerSlots[v.tier][v.slot].isBusy = false
-						end
-
-						if v.chain then
-							carryingChain = nil
-						end
-
-						items_attatched[k] = nil
+					if v.chain then
+						carryingChain = nil
 					end
+
+					items_attached[k] = nil
 				end
 			end
 		end
@@ -235,10 +231,9 @@ local doingCheck = false
 local function DoItemCheck()
 	if not FullyLoaded then return end
 	if doingCheck then return end
-	if IsPedShooting(ped) or IsPlayerFreeAiming(PlayerId) then return end -- reduces the shooting spamming
+	if IsPedShooting(cache.ped) or IsPlayerFreeAiming(PlayerId) then return end -- reduces the shooting spamming
 	doingCheck = true
 	Wait(math.random(1, 100)) -- When shooting a gun, the event is called HUNDREDS of times, this here is to prevent that from affecting the players MS too much at a time.
-	local ped = PlayerPedId()
 	local items = PlayerData.items
 	itemSlots = {}
 	if items then
@@ -248,9 +243,9 @@ local function DoItemCheck()
 				itemSlots[item.name] = props[item.name]
 				if props[item.name].chain then
 					if not carryingChain then
-						AttatchChain(props[item.name].model, props[item.name].hash, props[item.name].tier, item.name)
+						AttachChain(props[item.name].model, props[item.name].hash, props[item.name].tier, item.name)
 					end
-				elseif not items_attatched[props[item.name].model] and GetSelectedPedWeapon(ped) ~= props[item.name].hash and
+				elseif not items_attached[props[item.name].model] and GetSelectedPedWeapon(cache.ped) ~= props[item.name].hash and
 					getFreeSlot(props[item.name].tier) >= 1 then
 					AttachWeapon(props[item.name].model, props[item.name].hash, props[item.name].tier, item.name)
 				end
@@ -268,8 +263,8 @@ end
 -- ** EXPORTS ** --
 local function toggleProps()
 	if override then
-		if items_attatched then
-			for k, v in pairs(items_attatched) do
+		if items_attached then
+			for k, v in pairs(items_attached) do
 
 				DeleteObject(v.handle)
 
@@ -281,15 +276,15 @@ local function toggleProps()
 					carryingChain = nil
 				end
 
-				items_attatched[k] = nil
+				items_attached[k] = nil
 			end
 		end
 		override = false
 	else
 		override = true
 
-		if items_attatched then
-			for k, v in pairs(items_attatched) do
+		if items_attached then
+			for k, v in pairs(items_attached) do
 
 				DeleteObject(v.handle)
 
@@ -301,7 +296,7 @@ local function toggleProps()
 					carryingChain = nil
 				end
 
-				items_attatched[k] = nil
+				items_attached[k] = nil
 			end
 		end
 	end
@@ -310,21 +305,21 @@ end
 exports("toggleProps", toggleProps)
 
 local function isCarryingAnObject(item)
-	if items_attatched[props[item].model] then return true else return false end
+	if items_attached[props[item].model] then return true else return false end
 end
 
 exports('isCarryingAnObject', isCarryingAnObject)
 
 local function GetPlayerCarryItems()
-	return items_attatched
+	return items_attached
 end
 
 exports('GetPlayerCarryItems', GetPlayerCarryItems)
 
 local function refreshProps()
 	if not FullyLoaded then return end
-	if items_attatched then
-		for k, v in pairs(items_attatched) do
+	if items_attached then
+		for k, v in pairs(items_attached) do
 			DeleteObject(v.handle)
 
 			if v.slot then
@@ -335,7 +330,7 @@ local function refreshProps()
 				carryingChain = nil
 			end
 
-			items_attatched[k] = nil
+			items_attached[k] = nil
 		end
 	end
 
@@ -362,7 +357,7 @@ AddEventHandler('ox_inventory:currentWeapon', function(data)
 	if override then return end
 	if data then
 		data.name = data.name:lower()
-		if props[data.name] and items_attatched[props[data.name].model] then
+		if props[data.name] and items_attached[props[data.name].model] then
 			DeleteWeapon(props[data.name].model)
 		end
 	else
@@ -373,7 +368,7 @@ end)
 
 RegisterNetEvent('weapons:client:SetCurrentWeapon', function(data)
 	if data and LocalPlayer.state.isLoggedIn then
-		if props[data.name] and items_attatched[props[data.name].model] then
+		if props[data.name] and items_attached[props[data.name].model] then
 			DeleteWeapon(props[data.name].model)
 		end
 	elseif not data and LocalPlayer.state.isLoggedIn then
@@ -415,9 +410,9 @@ end)
 
 AddEventHandler('onResourceStop', function(resource)
 	if resource == GetCurrentResourceName() then
-		for key, attached_object in pairs(items_attatched) do
+		for key, attached_object in pairs(items_attached) do
 			DeleteObject(attached_object.handle)
-			items_attatched[key] = nil
+			items_attached[key] = nil
 		end
 	end
 end)
