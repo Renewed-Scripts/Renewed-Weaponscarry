@@ -200,7 +200,7 @@ AddStateBagChangeHandler('hide_props', ('player:%s'):format(cache.serverId), fun
             playerState:set('weapons_carry', false, true)
         end
     else
-        return updateState()
+        return SetTimeout(100, updateState)
     end
 end)
 
