@@ -1,12 +1,17 @@
 fx_version 'cerulean'
-game 'gta5'
-
-author 'Renewed Scripts'
-description 'Renewed Weapons and Carry script allow you to give your players weapons on their back and carry items all in 1 resource with ultra low performance hit between 0.00 and 0.01'
-version '1.0.0'
-
+use_experimental_fxv2_oal 'yes'
 lua54 'yes'
 
-shared_scripts { '@ox_lib/init.lua', 'shared/config.lua' }
-client_scripts { 'client/*.lua' }
+game 'gta5'
 
+description 'Renewed Weaponscarry'
+version '2.0.0'
+
+shared_script '@ox_lib/init.lua'
+
+client_script 'client/weapons.lua'
+server_script 'server.lua'
+files {
+    'config.lua',
+    'utils/client.lua',
+}
