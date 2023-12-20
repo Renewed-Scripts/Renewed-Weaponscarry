@@ -120,7 +120,7 @@ local function updateState()
     local items = Utils.formatPlayerInventory(myInventory, currentWeapon)
     local myAttached = playerState.weapons_carry
 
-    if not lib.table.matches(items, myAttached) then
+    if not playerState.hide_props and not lib.table.matches(items, myAttached) then
         playerState:set('weapons_carry', items, true)
     end
 end
@@ -191,6 +191,18 @@ local function refreshLocalProps()
         createAllObjects(cache.ped, Items, Players[cache.playerId], 0)
     end
 end
+
+AddStateBagChangeHandler('hide_props', ('player:%s'):format(cache.serverId), function(_, _, value)
+    if value then
+        local items = playerState.weapons_carry
+
+        if items and next(items) then
+            playerState:set('weapons_carry', false, true)
+        end
+    else
+        return updateState()
+    end
+end)
 
 lib.onCache('ped', function()
     refreshWeapons()
