@@ -196,6 +196,22 @@ lib.onCache('ped', function()
     refreshWeapons()
 end)
 
+lib.onCache('vehicle', function(value)
+    if not value then
+        local items = playerState.weapons_carry
+
+        if items and next(items) then
+            for i = 1, #items do
+                local item = items[i]
+
+                if item.components and next(item.components) then
+                    return refreshWeapons()
+                end
+            end
+        end
+    end
+end)
+
 AddStateBagChangeHandler('bucket', ('player:%s'):format(cache.serverId), function(_, _, value)
     if value == 0 then
         if playerState.weapons_carry and next(playerState.weapons_carry) then
