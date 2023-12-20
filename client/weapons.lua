@@ -229,3 +229,11 @@ AddEventHandler('onResourceStop', function(resource)
         end
     end
 end)
+
+AddEventHandler('onResourceStart', function(resource)
+    if resource == GetCurrentResourceName() then
+        Wait(100)
+        myInventory = exports.ox_inventory:GetPlayerItems()
+        refreshWeapons()
+    end
+end)
