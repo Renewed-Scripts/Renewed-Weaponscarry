@@ -1,5 +1,6 @@
 local Config = require 'config'
 local ox_items = exports.ox_inventory:Items()
+local skins = {}
 local Utils = {}
 
 local playerSlots = {
@@ -20,6 +21,12 @@ local playerSlots = {
 	},
 }
 
+for k, v in pairs(ox_items) do
+    if v.type == 'skin' then
+        skins[#skins+1] = k
+    end
+end
+
 function Utils.resetSlots()
     for i = 1, #playerSlots do
         for v = 1, #playerSlots[i] do
@@ -28,19 +35,41 @@ function Utils.resetSlots()
     end
 end
 
+function Utils.getLuxeComponent(metadata)
+    for i = 1, #metadata do
+
+        if lib.table.contains(skins, metadata[i]) then
+            table.remove(metadata, i)
+            return metadata, ox_items['at_skin_luxe'].client.component
+        end
+    end
+
+    return metadata
+end
+
 
 function Utils.equipComponents(metadata, weaponObj)
+    local modelSwap
+
     if metadata.components then
-        for i = 1, #metadata.components do
-            local components = ox_items[metadata.components[i]].client.component
+        local compData, varMod = Utils.getLuxeComponent(metadata.components)
+
+        if varMod and next(varMod) then
+            for i = 1, #varMod do
+                local component = varMod[i]
+                if DoesWeaponTakeWeaponComponent(metadata.hash, component) then
+                    modelSwap = GetWeaponComponentTypeModel(component)
+                    GiveWeaponComponentToWeaponObject(weaponObj, component)
+                end
+            end
+        end
+
+        for i = 1, #compData do
+            local components = ox_items[compData[i]].client.component
             for v = 1, #components do
                 local component = components[v]
                 if DoesWeaponTakeWeaponComponent(metadata.hash, component) then
-                    local compModel = GetWeaponComponentTypeModel(component)
-                    lib.requestModel(compModel, 1000)
-
                     GiveWeaponComponentToWeaponObject(weaponObj, component)
-                    SetModelAsNoLongerNeeded(compModel)
                 end
             end
         end
@@ -49,10 +78,17 @@ function Utils.equipComponents(metadata, weaponObj)
     if metadata.tint then
         SetWeaponObjectTintIndex(weaponObj, tint)
     end
+
+    if modelSwap then
+        lib.requestModel(modelSwap, 1000)
+        local coords = GetEntityCoords(weaponObj)
+        CreateModelSwap(coords.x, coords.y, coords.z, 0.1, GetEntityModel(weaponObj), modelSwap)
+        SetModelAsNoLongerNeeded(modelSwap)
+    end
 end
 
 function Utils.createWeapon(item)
-    lib.requestWeaponAsset(item.hash, 1000, 31, 1)
+    lib.requestWeaponAsset(item.hash, 1000, 31, 0)
     RequestWeaponHighDetailModel(item.hash)
     local weaponObject = CreateWeaponObject(item.hash, 50, 0.0, 0.0, 0.0, true, 1.0, 0)
 
