@@ -22,7 +22,7 @@ local playerSlots = {
 }
 
 for k, v in pairs(ox_items) do
-    if v.type == 'skin' then
+    if v.type == 'skin' or v.type == 'upgrade' then
         skins[#skins+1] = k
     end
 end
@@ -88,6 +88,30 @@ function Utils.equipComponents(metadata, weaponObj)
     end
 end
 
+function Utils.hasFlashLight(components)
+    if components and next(components) then
+        for i = 1, #components do
+            local component = components[i]
+
+            if component:find('flashlight') then
+                return true
+            end
+        end
+    end
+
+    return false
+end
+
+function Utils.checkFlashState(weapon)
+    local flashState = LocalPlayer.state.flashState
+
+    if flashState and flashState[weapon.serial] and Utils.hasFlashLight(weapon.components) then
+        return true
+    end
+
+    return false
+end
+
 function Utils.createWeapon(item)
     lib.requestWeaponAsset(item.hash, 1000, 31, 0)
     RequestWeaponHighDetailModel(item.hash)
@@ -97,6 +121,11 @@ function Utils.createWeapon(item)
     RemoveObjectHighDetailModel(item.hash)
 
     Utils.equipComponents(item, weaponObject)
+
+    if Utils.checkFlashState(item) then
+        SetCreateWeaponObjectLightSource(weaponObject, true)
+        Wait(0) -- We need to skip a frame before attaching the object for the lightsource to be created
+    end
 
     return weaponObject
 end
@@ -121,21 +150,21 @@ function Utils.findOpenSlot(tier)
     return slotTier[#slotTier]
 end
 
-function Utils.formatData(itemData, configTable)
-    local searchName = itemData.name:lower()
-    local isWeapon = searchName:find('weapon_')
+function Utils.formatData(itemData, itemConfig)
+    local isWeapon = itemData.name:find('WEAPON_')
 
-    local slot = Utils.findOpenSlot(Config[searchName].slot)
+    local slot = Utils.findOpenSlot(itemConfig.slot)
 
     return {
         name = itemData.name,
-        hash = isWeapon and configTable.hash or joaat(itemData.name),
+        hash = isWeapon and itemConfig.hash or joaat(itemData.name),
         components = isWeapon and itemData?.metadata?.components,
         tint = isWeapon and itemData?.metadata?.tint,
-        model = not isWeapon and Config[itemData.name].model,
-        pos = slot and slot.pos,
-        rot = slot and slot.rot,
-        bone = slot and slot.bone,
+        serial = isWeapon and itemData?.metadata?.serial,
+        model = itemConfig.model,
+        pos = slot and itemConfig.pos or slot.pos,
+        rot = slot and itemConfig.rot or slot.rot,
+        bone = slot and itemConfig.bone or slot.bone,
     }
 end
 
@@ -149,11 +178,9 @@ function Utils.formatPlayerInventory(inventory, currentWeapon)
 
         if currentWeapon and itemData and currentWeapon.name == itemData.name and lib.table.matches(itemData.metadata.components, currentWeapon.metadata.components) then
             currentWeapon = nil
-        elseif name then
-            if Config[name] then
-                amount += 1
-                items[amount] = Utils.formatData(itemData, Config[name])
-            end
+        elseif name and Config[name] then
+            amount += 1
+            items[amount] = Utils.formatData(itemData, Config[name])
         end
     end
 

@@ -3,6 +3,8 @@ local Utils = require 'utils.client'
 
 local Players = {}
 
+SetFlashLightKeepOnWhileMoving(true)
+
 local function deleteObjects(weapons)
     for i = 1, #weapons do
         local entity = weapons[i]?.entity
@@ -125,17 +127,58 @@ local function updateState()
     end
 end
 
+local function flashLightLoop()
+    local weaponSerial = currentWeapon.metadata.serial
+
+    if not weaponSerial then
+        return
+    end
+
+    local flashState = playerState.flashState and playerState.flashState[weaponSerial] or false
+
+    if flashState then
+        SetFlashLightEnabled(cache.ped, true)
+    end
+
+    while currentWeapon do
+        local currentState = IsFlashLightOn(cache.ped)
+        if currentState ~= flashState then
+            flashState = currentState
+        end
+
+        Wait(100)
+    end
+
+    playerState.flashState = flashState and {
+        [weaponSerial] = flashState
+    } or false
+end
+
 AddEventHandler('ox_inventory:currentWeapon', function(weapon)
+    local name = weapon and weapon.name
+
+    if name then
+        local searchName = name:lower()
+        if Config[searchName] then
+            local hasFlashLight = Utils.hasFlashLight(weapon.metadata.components)
+
+            if hasFlashLight then
+                SetTimeout(0, flashLightLoop)
+            end
+        end
+    end
+
+
     if weapon then
         for _, v in pairs(myInventory) do
-            if v?.name == weapon.name then
+            if v?.name == name then
                 currentWeapon = weapon
                 return updateState()
             end
         end
     elseif currentWeapon then
         currentWeapon = weapon
-        return updateState()
+        return SetTimeout(100, updateState)
     end
 end)
 
@@ -171,6 +214,9 @@ AddEventHandler('ox_inventory:updateInventory', function(changes)
         updateState()
     end
 end)
+
+
+---- Refresh Weapon Conditions ----
 
 local function refreshWeapons()
     if playerState.weapons_carry and next(playerState.weapons_carry) then
