@@ -37,10 +37,11 @@ end
 
 function Utils.getLuxeComponent(metadata)
     for i = 1, #metadata do
+        local component = metadata[i]
 
-        if lib.table.contains(skins, metadata[i]) then
+        if lib.table.contains(skins, component) then
             table.remove(metadata, i)
-            return metadata, ox_items['at_skin_luxe'].client.component
+            return metadata, ox_items[component].client.component
         end
     end
 
