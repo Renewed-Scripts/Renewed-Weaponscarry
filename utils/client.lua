@@ -41,32 +41,18 @@ function Utils.getLuxeComponent(metadata)
 
         if lib.table.contains(skins, component) then
             table.remove(metadata, i)
-            return metadata, ox_items[component].client.component
+            return ox_items[component].client.component
         end
     end
 
-    return metadata
+    return false
 end
 
 
 function Utils.equipComponents(metadata, weaponObj)
-    local modelSwap
-
     if metadata.components then
-        local compData, varMod = Utils.getLuxeComponent(metadata.components)
-
-        if varMod and next(varMod) then
-            for i = 1, #varMod do
-                local component = varMod[i]
-                if DoesWeaponTakeWeaponComponent(metadata.hash, component) then
-                    modelSwap = GetWeaponComponentTypeModel(component)
-                    GiveWeaponComponentToWeaponObject(weaponObj, component)
-                end
-            end
-        end
-
-        for i = 1, #compData do
-            local components = ox_items[compData[i]].client.component
+        for i = 1, #metadata.components do
+            local components = ox_items[metadata.components[i]].client.component
             for v = 1, #components do
                 local component = components[v]
                 if DoesWeaponTakeWeaponComponent(metadata.hash, component) then
@@ -78,13 +64,6 @@ function Utils.equipComponents(metadata, weaponObj)
 
     if metadata.tint then
         SetWeaponObjectTintIndex(weaponObj, tint)
-    end
-
-    if modelSwap then
-        lib.requestModel(modelSwap, 1000)
-        local coords = GetEntityCoords(weaponObj)
-        CreateModelSwap(coords.x, coords.y, coords.z, 0.1, GetEntityModel(weaponObj), modelSwap)
-        SetModelAsNoLongerNeeded(modelSwap)
     end
 end
 
@@ -112,6 +91,15 @@ function Utils.checkFlashState(weapon)
     return false
 end
 
+function Utils.getLuxeModel(hash, varMod)
+    for i = 1, #varMod do
+        local component = varMod[i]
+        if DoesWeaponTakeWeaponComponent(hash, component) then
+            return component
+        end
+    end
+end
+
 function Utils.createWeapon(item)
     lib.requestWeaponAsset(item.hash, 1000, 31, 0)
     RequestWeaponHighDetailModel(item.hash)
@@ -120,7 +108,20 @@ function Utils.createWeapon(item)
     RemoveWeaponAsset(item.hash)
     RemoveObjectHighDetailModel(item.hash)
 
-    Utils.equipComponents(item, weaponObject)
+    if next(item.components) or item.tint then
+        local skinMod = Utils.getLuxeComponent(item.components)
+        if skinMod then
+            local modName = Utils.getLuxeModel(item.hash, skinMod)
+
+            if modName then
+                DeleteEntity(weaponObject)
+                weaponObject = CreateWeaponObject(item.hash, 50, 0.0, 0.0, 0.0, true, 1.0, GetWeaponComponentTypeModel(modName), 0, 1)
+            end
+        end
+
+        Utils.equipComponents(item, weaponObject)
+    end
+
 
     if Utils.checkFlashState(item) then
         SetCreateWeaponObjectLightSource(weaponObject, true)
