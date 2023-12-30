@@ -278,6 +278,15 @@ AddStateBagChangeHandler('bucket', ('player:%s'):format(cache.serverId), functio
     end
 end)
 
+-- txAdmin noclip handling
+RegisterNetEvent('txcl:setPlayerMode', function(mode)
+    if mode == "noclip" then
+        playerState:set("hide_props", true, true)
+    elseif mode == "none" and playerState.hide_props then
+        playerState:set("hide_props", false, true)
+    end
+end)
+
 AddEventHandler('onResourceStop', function(resource)
     if resource == GetCurrentResourceName() then
         for _, v in pairs(Players) do
