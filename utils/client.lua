@@ -1,6 +1,5 @@
 local Config = require 'config'
 local ox_items = exports.ox_inventory:Items()
-local skins = {}
 local Utils = {}
 
 local playerSlots = {
@@ -21,49 +20,11 @@ local playerSlots = {
 	},
 }
 
-for k, v in pairs(ox_items) do
-    if v.type == 'skin' or v.type == 'upgrade' then
-        skins[#skins+1] = k
-    end
-end
-
 function Utils.resetSlots()
     for i = 1, #playerSlots do
         for v = 1, #playerSlots[i] do
             playerSlots[i][v].isBusy = false
         end
-    end
-end
-
-function Utils.getLuxeComponent(metadata)
-    for i = 1, #metadata do
-        local component = metadata[i]
-
-        if lib.table.contains(skins, component) then
-            table.remove(metadata, i)
-            return ox_items[component].client.component
-        end
-    end
-
-    return false
-end
-
-
-function Utils.equipComponents(metadata, weaponObj)
-    if metadata.components then
-        for i = 1, #metadata.components do
-            local components = ox_items[metadata.components[i]].client.component
-            for v = 1, #components do
-                local component = components[v]
-                if DoesWeaponTakeWeaponComponent(metadata.hash, component) then
-                    GiveWeaponComponentToWeaponObject(weaponObj, component)
-                end
-            end
-        end
-    end
-
-    if metadata.tint then
-        SetWeaponObjectTintIndex(weaponObj, tint)
     end
 end
 
@@ -91,39 +52,67 @@ function Utils.checkFlashState(weapon)
     return false
 end
 
-function Utils.getLuxeModel(hash, varMod)
-    for i = 1, #varMod do
-        local component = varMod[i]
-        if DoesWeaponTakeWeaponComponent(hash, component) then
-            return component
+function Utils.hasVarMod(hash, components)
+    for i = 1, #components do
+        local component = ox_items[components[i]]
+
+        if component.type == 'skin' or component.type == 'upgrade' then
+            local weaponComp = component.client.component
+            for j = 1, #weaponComp do
+                local weaponComponent = weaponComp[j]
+                if DoesWeaponTakeWeaponComponent(hash, weaponComponent) then
+                    return weaponComponent
+                end
+            end
         end
     end
+
+end
+
+function Utils.getWeaponComponents(hash, components)
+    local weaponComponents = {}
+    local amount = 0
+    local varMod = Utils.hasVarMod(hash, components)
+
+    for i = 1, #components do
+        local weaponComp = ox_items[components[i]].client.component
+        for j = 1, #weaponComp do
+            local weaponComponent = weaponComp[j]
+            if DoesWeaponTakeWeaponComponent(hash, weaponComponent) and varMod ~= weaponComponent then
+                amount += 1
+                weaponComponents[amount] = weaponComponent
+                break
+            end
+        end
+    end
+
+
+    return varMod, weaponComponents
 end
 
 function Utils.createWeapon(item)
+    local hasLuxeMod, components = Utils.getWeaponComponents(item.hash, item.components)
+
     lib.requestWeaponAsset(item.hash, 1000, 31, 0)
-    local weaponObject = CreateWeaponObject(item.hash, 50, 0.0, 0.0, 0.0, true, 1.0, 0)
-    RemoveWeaponAsset(item.hash)
 
-    if next(item.components) or item.tint then
-        local skinMod = Utils.getLuxeComponent(item.components)
-        if skinMod then
-            local modName = Utils.getLuxeModel(item.hash, skinMod)
+    local weaponObject = CreateWeaponObject(item.hash, 0, 0.0, 0.0, 0.0, true, 1.0, hasLuxeMod and GetWeaponComponentTypeModel(hasLuxeMod) or 0, false, false)
 
-            if modName then
-                DeleteEntity(weaponObject)
-                weaponObject = CreateWeaponObject(item.hash, 50, 0.0, 0.0, 0.0, true, 1.0, GetWeaponComponentTypeModel(modName), false, false)
-            end
+    if next(components) then
+        for i = 1, #components do
+            GiveWeaponComponentToWeaponObject(weaponObject, components[i])
         end
-
-        Utils.equipComponents(item, weaponObject)
     end
 
+    if item.tint then
+        SetWeaponObjectTintIndex(weaponObject, item.tint)
+    end
 
     if Utils.checkFlashState(item) then
         SetCreateWeaponObjectLightSource(weaponObject, true)
         Wait(0) -- We need to skip a frame before attaching the object for the lightsource to be created
     end
+
+    RemoveWeaponAsset(item.hash)
 
     return weaponObject
 end
@@ -138,14 +127,18 @@ end
 
 function Utils.findOpenSlot(tier)
     local slotTier = playerSlots[tier]
-    for i = 1, #slotTier do
-        if not slotTier[i].isBusy then
-            slotTier[i].isBusy = true
-            return slotTier[i]
+    local slotAmount = #slotTier
+
+    for i = 1, slotAmount do
+        local slot = slotTier[i]
+
+        if not slot.isBusy then
+            slot.isBusy = true
+            return slot
         end
     end
 
-    return slotTier[#slotTier]
+    return slotTier[slotAmount]
 end
 
 function Utils.formatData(itemData, itemConfig)
