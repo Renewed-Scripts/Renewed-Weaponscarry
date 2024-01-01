@@ -102,11 +102,8 @@ end
 
 function Utils.createWeapon(item)
     lib.requestWeaponAsset(item.hash, 1000, 31, 0)
-    RequestWeaponHighDetailModel(item.hash)
     local weaponObject = CreateWeaponObject(item.hash, 50, 0.0, 0.0, 0.0, true, 1.0, 0)
-
     RemoveWeaponAsset(item.hash)
-    RemoveObjectHighDetailModel(item.hash)
 
     if next(item.components) or item.tint then
         local skinMod = Utils.getLuxeComponent(item.components)
@@ -115,7 +112,7 @@ function Utils.createWeapon(item)
 
             if modName then
                 DeleteEntity(weaponObject)
-                weaponObject = CreateWeaponObject(item.hash, 50, 0.0, 0.0, 0.0, true, 1.0, GetWeaponComponentTypeModel(modName), 0, 1)
+                weaponObject = CreateWeaponObject(item.hash, 50, 0.0, 0.0, 0.0, true, 1.0, GetWeaponComponentTypeModel(modName), false, false)
             end
         end
 
