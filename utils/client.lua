@@ -61,46 +61,55 @@ function Utils.hasVarMod(hash, components)
             for j = 1, #weaponComp do
                 local weaponComponent = weaponComp[j]
                 if DoesWeaponTakeWeaponComponent(hash, weaponComponent) then
-                    return weaponComponent
+                    return GetWeaponComponentTypeModel(weaponComponent)
                 end
             end
         end
     end
-
 end
 
-function Utils.getWeaponComponents(hash, components)
+function Utils.getWeaponComponents(name, hash, components)
     local weaponComponents = {}
     local amount = 0
+    local hadClip = false
     local varMod = Utils.hasVarMod(hash, components)
 
     for i = 1, #components do
-        local weaponComp = ox_items[components[i]].client.component
-        for j = 1, #weaponComp do
-            local weaponComponent = weaponComp[j]
+        local weaponComp = ox_items[components[i]]
+        for j = 1, #weaponComp.client.component do
+            local weaponComponent = weaponComp.client.component[j]
             if DoesWeaponTakeWeaponComponent(hash, weaponComponent) and varMod ~= weaponComponent then
                 amount += 1
                 weaponComponents[amount] = weaponComponent
+
+                if weaponComp.type == 'magazine' then
+                    hadClip = true
+                end
+
                 break
             end
         end
+    end
+
+    if not hadClip then
+        amount += 1
+        weaponComponents[amount] = joaat(('COMPONENT_%s_CLIP_01'):format(name:sub(8)))
     end
 
 
     return varMod, weaponComponents
 end
 
+
 function Utils.createWeapon(item)
-    local hasLuxeMod, components = Utils.getWeaponComponents(item.hash, item.components)
+    local hasLuxeMod, components = Utils.getWeaponComponents(item.name, item.hash, item.components)
 
     lib.requestWeaponAsset(item.hash, 1000, 31, 0)
 
-    local weaponObject = CreateWeaponObject(item.hash, 0, 0.0, 0.0, 0.0, true, 1.0, hasLuxeMod and GetWeaponComponentTypeModel(hasLuxeMod) or 0, false, false)
+    local weaponObject = CreateWeaponObject(item.hash, 0, 0.0, 0.0, 0.0, false, 1.0, hasLuxeMod or 0, false, false)
 
-    if next(components) then
-        for i = 1, #components do
-            GiveWeaponComponentToWeaponObject(weaponObject, components[i])
-        end
+    for i = 1, #components do
+        GiveWeaponComponentToWeaponObject(weaponObject, components[i])
     end
 
     if item.tint then
