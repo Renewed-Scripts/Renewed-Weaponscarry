@@ -97,16 +97,26 @@ function Utils.getWeaponComponents(name, hash, components)
     end
 
 
-    return varMod, weaponComponents
+    return varMod, weaponComponents, hadClip
 end
 
 
 function Utils.createWeapon(item)
-    local hasLuxeMod, components = Utils.getWeaponComponents(item.name, item.hash, item.components)
+    local hasLuxeMod, components, hadClip = Utils.getWeaponComponents(item.name, item.hash, item.components)
 
     lib.requestWeaponAsset(item.hash, 1000, 31, 0)
 
-    local weaponObject = CreateWeaponObject(item.hash, 0, 0.0, 0.0, 0.0, false, 1.0, hasLuxeMod or 0, false, false)
+    if hasLuxeMod and not HasModelLoaded(hasLuxeMod) then
+        lib.requestModel(hasLuxeMod, 500)
+    end
+
+    local showDefault = true
+
+    if hasLuxeMod and hadClip then
+        showDefault = false
+    end
+
+    local weaponObject = CreateWeaponObject(item.hash, 0, 0.0, 0.0, 0.0, showDefault, 1.0, hasLuxeMod or 0, false, true)
 
     for i = 1, #components do
         GiveWeaponComponentToWeaponObject(weaponObject, components[i])
@@ -119,6 +129,10 @@ function Utils.createWeapon(item)
     if Utils.checkFlashState(item) then
         SetCreateWeaponObjectLightSource(weaponObject, true)
         Wait(0) -- We need to skip a frame before attaching the object for the lightsource to be created
+    end
+
+    if hasLuxeMod then
+        SetModelAsNoLongerNeeded(hasLuxeMod)
     end
 
     RemoveWeaponAsset(item.hash)
