@@ -270,7 +270,7 @@ lib.onCache('vehicle', function(value)
     end
 end)
 
-AddStateBagChangeHandler('bucket', ('player:%s'):format(cache.serverId), function(_, _, value)
+AddStateBagChangeHandler('instance', ('player:%s'):format(cache.serverId), function(_, _, value)
     if value == 0 then
         if playerState.weapons_carry and next(playerState.weapons_carry) then
             refreshLocalProps()
