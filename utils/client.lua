@@ -28,6 +28,16 @@ function Utils.resetSlots()
     end
 end
 
+function Utils.removeEntities(data)
+    for i = 1, #data do
+        local entity = data[i]?.entity
+
+        if entity then
+            DeleteEntity(entity)
+        end
+    end
+end
+
 function Utils.hasFlashLight(components)
     if components and next(components) then
         for i = 1, #components do

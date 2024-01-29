@@ -5,21 +5,11 @@ local Players = {}
 
 SetFlashLightKeepOnWhileMoving(true)
 
-local function deleteObjects(weapons)
-    for i = 1, #weapons do
-        local entity = weapons[i]?.entity
-
-        if entity then
-            DeleteEntity(entity)
-        end
-    end
-end
-
 local function removePlayer(playerId)
     local Player = Players[playerId]
 
     if Player and next(Player) then
-        deleteObjects(Player)
+        Utils.removeEntities(Player)
         Players[playerId] = nil
     end
 end
@@ -61,6 +51,7 @@ local function createAllObjects(pedHandle, addItems, currentTable, amount)
 
         if Config[name] then
             local object = createItem(item)
+
             attachObject(item, object, pedHandle)
 
             SetEntityCompletelyDisableCollision(object, false, true)
@@ -95,7 +86,7 @@ AddStateBagChangeHandler('weapons_carry', nil, function(bagName, _, value, _, re
         local amount = #currentTable
 
         if amount > 0 then
-            deleteObjects(currentTable)
+            Utils.removeEntities(currentTable)
             table.wipe(currentTable)
             amount = 0
         end
@@ -157,7 +148,7 @@ end
 AddEventHandler('ox_inventory:currentWeapon', function(weapon)
     local name = weapon and weapon.name
 
-    if name then
+    if weapon then
         local searchName = name:lower()
         if Config[searchName] then
             local hasFlashLight = Utils.hasFlashLight(weapon.metadata.components)
@@ -228,7 +219,7 @@ end
 
 local function refreshLocalProps()
     if Players[cache.playerId] then
-        deleteObjects(Players[cache.playerId])
+        Utils.removeEntities(Players[cache.playerId])
 
         table.wipe(Players[cache.playerId])
 
@@ -291,7 +282,7 @@ AddEventHandler('onResourceStop', function(resource)
     if resource == GetCurrentResourceName() then
         for _, v in pairs(Players) do
             if v then
-                deleteObjects(v)
+                Utils.removeEntities(v)
             end
         end
     end
