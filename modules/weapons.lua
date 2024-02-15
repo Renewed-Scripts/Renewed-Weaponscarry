@@ -94,7 +94,7 @@ local function createAllObjects(pedHandle, addItems, currentTable, amount)
             local object = createItem(item)
 
             if object > 0 then
-                attachObject(item, object, pedHandle)
+                Utils.AttachEntityToPlayer(item, object, pedHandle)
 
                 SetEntityCompletelyDisableCollision(object, false, true)
 

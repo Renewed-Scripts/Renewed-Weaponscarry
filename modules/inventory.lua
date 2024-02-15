@@ -1,10 +1,11 @@
 local weaponModule = require 'modules.weapons'
+local carryModule = require 'modules.carry'
 local weaponsConfig = require 'data.weapons'
 local carryConfig = require 'data.carry'
 
 local Inventory = exports.ox_inventory:GetPlayerItems() or {}
 local playerState = LocalPlayer.state
-local currentWeapon
+local currentWeapon = {}
 
 local hasFlashLight = require 'modules.utils'.hasFlashLight
 AddEventHandler('ox_inventory:currentWeapon', function(weapon)
@@ -23,7 +24,7 @@ AddEventHandler('ox_inventory:currentWeapon', function(weapon)
             currentWeapon = weapon
             return weaponModule.updateWeapons(Inventory, weapon)
         end
-    elseif table.type(currentWeapon) ~= 'empty' then
+    elseif currentWeapon and table.type(currentWeapon) ~= 'empty' then
         table.wipe(currentWeapon)
         weaponModule.updateWeapons(Inventory, currentWeapon)
     end
@@ -33,7 +34,7 @@ end)
 --- Checks if the item in the slot has changed and returns the config for the item
 --- @param slot number
 --- @param item table
---- @return table
+--- @return boolean, string
 local function itemChanged(slot, item)
     local name = item and item.name:lower()
     local previousItem = not item and Inventory[slot]
@@ -41,10 +42,16 @@ local function itemChanged(slot, item)
     if previousItem then
         local prevName = previousItem.name:lower()
 
-        return weaponsConfig[prevName] or carryConfig[prevName]
+        local isWeapon = weaponsConfig[prevName]
+        local isCarry = carryConfig[prevName]
+
+        return (isWeapon or isCarry) ~= nil, isWeapon and 'weapon' or isCarry and 'carry' or ''
     end
 
-    return weaponsConfig[name] or carryConfig[name]
+    local isWeapon = weaponsConfig[name]
+    local isCarry = carryConfig[name]
+
+    return (isWeapon or isCarry) ~= nil, isWeapon and 'weapon' or isCarry and 'carry' or ''
 end
 
 
@@ -53,18 +60,25 @@ AddEventHandler('ox_inventory:updateInventory', function(changes)
         return
     end
 
-    local forceUpdate = false
+    local forceUpdate, typeUpdate = false, ''
 
     for slot, item in pairs(changes) do
         if not forceUpdate then
-            forceUpdate = itemChanged(slot, item) ~= nil
+            forceUpdate, typeUpdate = itemChanged(slot, item)
         end
 
         Inventory[slot] = item
     end
 
     if forceUpdate then
-        weaponModule.updateWeapons(Inventory, currentWeapon)
+
+        print(typeUpdate)
+
+        if typeUpdate == 'weapon' then
+            weaponModule.updateWeapons(Inventory, currentWeapon)
+        elseif typeUpdate == 'carry' then
+            carryModule.updateCarryState(Inventory)
+        end
     end
 end)
 
@@ -76,8 +90,12 @@ AddEventHandler('onResourceStart', function(resource)
         if playerState.weapons_carry and table.type(playerState.weapons_carry) ~= 'empty' then
             playerState:set('weapons_carry', false, true)
 
-            weaponModule.updateWeapons(Inventory, currentWeapon)
+            --weaponModule.updateWeapons(Inventory, currentWeapon)
+            --carryModule.updateCarryState(Inventory)
         end
+
+        weaponModule.updateWeapons(Inventory, currentWeapon)
+        carryModule.updateCarryState(Inventory)
     end
 end)
 

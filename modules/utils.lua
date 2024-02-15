@@ -216,5 +216,13 @@ function Utils.getEntityFromStateBag(bagName, keyName)
 
 end
 
+function Utils.AttachEntityToPlayer(item, entity, pedHandle)
+    local pos, rot = item.pos, item.rot
+
+    if pos and rot then
+        AttachEntityToEntity(entity, pedHandle, GetPedBoneIndex(pedHandle, item.bone), pos.x, pos.y, pos.z, rot.x, rot.y, rot.z, true, true, false, false, 2, true)
+    end
+end
+
 
 return Utils
