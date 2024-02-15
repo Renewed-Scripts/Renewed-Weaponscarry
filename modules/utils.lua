@@ -1,4 +1,3 @@
-local Config = require 'config'
 local ox_items = exports.ox_inventory:Items()
 local Utils = {}
 
@@ -39,7 +38,7 @@ function Utils.removeEntities(data)
 end
 
 function Utils.hasFlashLight(components)
-    if components and next(components) then
+    if components and table.type(components) ~= 'empty' then
         for i = 1, #components do
             local component = components[i]
 
@@ -174,10 +173,10 @@ function Utils.findOpenSlot(tier)
     return slotTier[slotAmount]
 end
 
-function Utils.formatData(itemData, itemConfig)
+function Utils.formatData(itemData, itemConfig, ignoreSlot)
     local isWeapon = itemData.name:find('WEAPON_')
 
-    local slot = Utils.findOpenSlot(itemConfig.slot)
+    local slot = not ignoreSlot and Utils.findOpenSlot(itemConfig.slot)
 
     return {
         name = itemData.name,
@@ -186,31 +185,36 @@ function Utils.formatData(itemData, itemConfig)
         tint = isWeapon and itemData?.metadata?.tint,
         serial = isWeapon and itemData?.metadata?.serial,
         model = itemConfig.model,
-        pos = slot and itemConfig.pos or slot.pos,
-        rot = slot and itemConfig.rot or slot.rot,
-        bone = slot and itemConfig.bone or slot.bone,
+        pos = slot and slot.pos or itemConfig.pos,
+        rot = slot and slot.rot or itemConfig.rot,
+        bone = slot and slot.bone or itemConfig.bone,
     }
 end
 
 
-function Utils.formatPlayerInventory(inventory, currentWeapon)
-    local items = {}
-    local amount = 0
+function Utils.getEntityFromStateBag(bagName, keyName)
 
-    for _, itemData in pairs(inventory) do
-        local name = itemData and itemData.name:lower()
+    if bagName:find('entity:') then
+        local netId = tonumber(bagName:gsub('entity:', ''), 10)
 
-        if currentWeapon and itemData and currentWeapon.name == itemData.name and lib.table.matches(itemData.metadata.components, currentWeapon.metadata.components) then
-            currentWeapon = nil
-        elseif name and Config[name] then
-            amount += 1
-            items[amount] = Utils.formatData(itemData, Config[name])
-        end
+        local entity =  lib.waitFor(function()
+            if NetworkDoesEntityExistWithNetworkId(netId) then return NetworkGetEntityFromNetworkId(netId) end
+        end, ('%s received invalid entity! (%s)'):format(keyName, bagName), 10000)
+
+        return entity
+    elseif bagName:find('player:') then
+        local serverId = tonumber(bagName:gsub('player:', ''), 10)
+        local playerId = GetPlayerFromServerId(serverId)
+
+        local entity = lib.waitFor(function()
+            local ped = GetPlayerPed(playerId)
+            if ped > 0 then return ped end
+        end, ('%s received invalid entity! (%s)'):format(keyName, bagName), 10000)
+
+        return playerId, entity
     end
 
-    Utils.resetSlots()
-
-    return items
 end
+
 
 return Utils
