@@ -40,7 +40,7 @@ end
 local function createAllObjects(vehicle, addItems, currentTable, amount)
     for i = 1, #addItems do
         local item = addItems[i]
-        local object = Utils.createObject(item)
+        local object = Utils.getEntity(item)
 
         SetEntityCollision(object, false, false)
 

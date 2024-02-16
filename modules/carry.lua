@@ -129,13 +129,11 @@ AddStateBagChangeHandler('carry_items', nil, function(bagName, keyName, value, _
         end
 
         if value and table.type(value) ~= 'empty' then
-            if value.model then
-                entity = Utils.createObject(value)
-            elseif value.hash then
-                entity = Utils.createWeapon(value)
-            end
+            entity = Utils.getEntity(value)
 
-            Utils.AttachEntityToPlayer(value, entity, pedHandle)
+            if entity > 0 then
+                Utils.AttachEntityToPlayer(value, entity, pedHandle)
+            end
         end
 
         Players[playerId] = entity
@@ -176,19 +174,6 @@ local function updateState(inventory)
         end
     end
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 AddEventHandler('onResourceStop', function(resource)
    if resource == GetCurrentResourceName() then

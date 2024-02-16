@@ -109,54 +109,6 @@ function Utils.getWeaponComponents(name, hash, components)
     return varMod, weaponComponents, hadClip
 end
 
-
-function Utils.createWeapon(item)
-    local hasLuxeMod, components, hadClip = Utils.getWeaponComponents(item.name, item.hash, item.components)
-
-    lib.requestWeaponAsset(item.hash, 1000, 31, 0)
-
-    if hasLuxeMod and not HasModelLoaded(hasLuxeMod) then
-        lib.requestModel(hasLuxeMod, 500)
-    end
-
-    local showDefault = true
-
-    if hasLuxeMod and hadClip then
-        showDefault = false
-    end
-
-    local weaponObject = CreateWeaponObject(item.hash, 0, 0.0, 0.0, 0.0, showDefault, 1.0, hasLuxeMod or 0, false, true)
-
-    for i = 1, #components do
-        GiveWeaponComponentToWeaponObject(weaponObject, components[i])
-    end
-
-    if item.tint then
-        SetWeaponObjectTintIndex(weaponObject, item.tint)
-    end
-
-    if Utils.checkFlashState(item) then
-        SetCreateWeaponObjectLightSource(weaponObject, true)
-        Wait(0) -- We need to skip a frame before attaching the object for the lightsource to be created
-    end
-
-    if hasLuxeMod then
-        SetModelAsNoLongerNeeded(hasLuxeMod)
-    end
-
-    RemoveWeaponAsset(item.hash)
-
-    return weaponObject
-end
-
-function Utils.createObject(item)
-    lib.requestModel(item.model, 1000)
-    local Object = CreateObject(item.model, 0.0, 0.0, 0.0, false, false, false)
-    SetModelAsNoLongerNeeded(item.model)
-
-    return Object
-end
-
 function Utils.findOpenSlot(tier)
     local slotTier = playerSlots[tier]
     local slotAmount = #slotTier
@@ -222,6 +174,69 @@ function Utils.AttachEntityToPlayer(item, entity, pedHandle)
     if pos and rot then
         AttachEntityToEntity(entity, pedHandle, GetPedBoneIndex(pedHandle, item.bone), pos.x, pos.y, pos.z, rot.x, rot.y, rot.z, true, true, false, false, 2, true)
     end
+end
+
+local function createObject(item)
+    lib.requestModel(item.model, 1000)
+    local Object = CreateObject(item.model, 0.0, 0.0, 0.0, false, false, false)
+    SetModelAsNoLongerNeeded(item.model)
+
+    return Object
+end
+
+local function createWeapon(item)
+    local _, hash = pcall(function()
+		return lib.requestWeaponAsset(item.hash, 5000, 31, 0)
+	end)
+
+    if hash and hash > 0 then
+        local hasLuxeMod, components, hadClip = Utils.getWeaponComponents(item.name, hash, item.components)
+
+        if hasLuxeMod then
+            lib.requestModel(hasLuxeMod, 500)
+        end
+
+        local showDefault = true
+
+        if hasLuxeMod and hadClip then
+            showDefault = false
+        end
+
+        local weaponObject = CreateWeaponObject(hash, 0, 0.0, 0.0, 0.0, showDefault, 1.0, hasLuxeMod or 0, false, true)
+
+        for i = 1, #components do
+            GiveWeaponComponentToWeaponObject(weaponObject, components[i])
+        end
+
+        if item.tint then
+            SetWeaponObjectTintIndex(weaponObject, item.tint)
+        end
+
+        if Utils.checkFlashState(item) then
+            SetCreateWeaponObjectLightSource(weaponObject, true)
+            Wait(0) -- We need to skip a frame before attaching the object for the lightsource to be created
+        end
+
+        if hasLuxeMod then
+            SetModelAsNoLongerNeeded(hasLuxeMod)
+        end
+
+        RemoveWeaponAsset(hash)
+
+        return weaponObject
+    end
+
+    return 0
+end
+
+function Utils.getEntity(payload)
+    if payload and payload.model then
+        return createObject(payload)
+    elseif payload and payload.hash then
+        return createWeapon(payload)
+    end
+
+    return 0
 end
 
 
