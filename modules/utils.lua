@@ -111,24 +111,27 @@ end
 
 function Utils.findOpenSlot(tier)
     local slotTier = playerSlots[tier]
-    local slotAmount = #slotTier
 
-    for i = 1, slotAmount do
-        local slot = slotTier[i]
+    if slotTier then
+        local slotAmount = #slotTier
 
-        if not slot.isBusy then
-            slot.isBusy = true
-            return slot
+        for i = 1, slotAmount do
+            local slot = slotTier[i]
+
+            if not slot.isBusy then
+                slot.isBusy = true
+                return slot
+            end
         end
-    end
 
-    return slotTier[slotAmount]
+        return slotTier[slotAmount]
+    end
 end
 
 function Utils.formatData(itemData, itemConfig, ignoreSlot)
     local isWeapon = itemData.name:find('WEAPON_')
 
-    local slot = not ignoreSlot and Utils.findOpenSlot(itemConfig.slot)
+    local slot = not ignoreSlot and itemConfig.slot and Utils.findOpenSlot(itemConfig.slot)
 
     return {
         name = itemData.name,
@@ -137,9 +140,9 @@ function Utils.formatData(itemData, itemConfig, ignoreSlot)
         tint = isWeapon and itemData?.metadata?.tint,
         serial = isWeapon and itemData?.metadata?.serial,
         model = itemConfig.model,
-        pos = slot and slot.pos or itemConfig.pos,
-        rot = slot and slot.rot or itemConfig.rot,
-        bone = slot and slot.bone or itemConfig.bone,
+        pos = itemConfig.pos or slot?.pos,
+        rot = itemConfig.rot or slot?.rot,
+        bone = itemConfig.bone or slot?.bone,
     }
 end
 
