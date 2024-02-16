@@ -2,13 +2,6 @@
 local Utils = require 'modules.utils'
 local Vehicles = {}
 
---[[
-    Changelog:
-    * Added support for multiple keys instead of being hard coded to one (This will bring issues down the line if it stayed 1)
-    * refactored the code
-]]
-
-
 CreateThread(function()
     while true do
 
