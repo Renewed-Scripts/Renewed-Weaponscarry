@@ -104,7 +104,7 @@ AddStateBagChangeHandler('weapons_carry', nil, function(bagName, keyName, value,
             amount = 0
         end
 
-        if next(value) then
+        if value and table.type(value) ~= 'empty' then
             createAllObjects(pedHandle, value, currentTable, amount)
         end
 
@@ -124,9 +124,8 @@ local function updateState(inventory, currentWeapon)
     end
 
     local items = formatPlayerInventory(inventory, currentWeapon)
-    local myAttached = playerState.weapons_carry
 
-    if not playerState.hide_props and not lib.table.matches(items, myAttached) then
+    if not playerState.hide_props and not lib.table.matches(items, playerState.weapons_carry) then
         playerState:set('weapons_carry', items, true)
     end
 end

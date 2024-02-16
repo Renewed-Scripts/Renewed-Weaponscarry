@@ -189,7 +189,7 @@ local function createWeapon(item)
 		return lib.requestWeaponAsset(item.hash, 5000, 31, 0)
 	end)
 
-    if hash and hash > 0 then
+    if hash and hash ~= 0 then
         local hasLuxeMod, components, hadClip = Utils.getWeaponComponents(item.name, hash, item.components)
 
         if hasLuxeMod then
@@ -202,6 +202,7 @@ local function createWeapon(item)
             showDefault = false
         end
 
+        ---@diagnostic disable-next-line: redundant-parameter
         local weaponObject = CreateWeaponObject(hash, 0, 0.0, 0.0, 0.0, showDefault, 1.0, hasLuxeMod or 0, false, true)
 
         for i = 1, #components do
@@ -230,9 +231,9 @@ local function createWeapon(item)
 end
 
 function Utils.getEntity(payload)
-    if payload and payload.model then
+    if payload?.model then
         return createObject(payload)
-    elseif payload and payload.hash then
+    elseif payload?.hash then
         return createWeapon(payload)
     end
 
