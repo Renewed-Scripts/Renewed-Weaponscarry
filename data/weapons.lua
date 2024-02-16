@@ -3,14 +3,10 @@ return {
         model = `bkr_prop_weed_drying_02a`,
         slot = 3,
     },
+
     -- meth
     meth = {
         model = `hei_prop_pill_bag_01`,
-        slot = 3,
-    },
-    -- Contraband
-    money = {
-        model = `prop_money_bag_01`,
         slot = 3,
     },
 

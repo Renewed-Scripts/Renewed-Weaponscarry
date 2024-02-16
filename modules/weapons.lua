@@ -55,31 +55,6 @@ local function formatPlayerInventory(inventory, currentWeapon)
     return items
 end
 
----Attaches a prop to the specified pedHandle
----@param item table
----@param entity number
----@param pedHandle number
-local function attachObject(item, entity, pedHandle)
-    local pos, rot = item.pos, item.rot
-
-    if pos and rot then
-        AttachEntityToEntity(entity, pedHandle, GetPedBoneIndex(pedHandle, item.bone), pos.x, pos.y, pos.z, rot.x, rot.y, rot.z, true, true, false, false, 2, true)
-    end
-end
-
----Creates the entity from the type if its a hash or a model
----@param item table
----@return number
-local function createItem(item)
-    if item and item.model then
-        return Utils.createObject(item)
-    elseif item and item.hash then
-        return Utils.createWeapon(item)
-    end
-
-    return 0
-end
-
 ---Creates all the objects for the player
 ---@param pedHandle number
 ---@param addItems table
@@ -91,7 +66,7 @@ local function createAllObjects(pedHandle, addItems, currentTable, amount)
         local name = item.name:lower()
 
         if Config[name] then
-            local object = createItem(item)
+            local object = Utils.getEntity(item)
 
             if object > 0 then
                 Utils.AttachEntityToPlayer(item, object, pedHandle)
