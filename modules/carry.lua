@@ -156,10 +156,8 @@ AddStateBagChangeHandler('carry_loop', ('player:%s'):format(cache.serverId), fun
 end)
 
 local function updateState(inventory)
-    if playerState.carry_items == nil then
-        while playerState.carry_items == nil do
-            Wait(0)
-        end
+    while playerState.carry_items == nil do
+        Wait(0)
     end
 
     local carryItem, itemConfig = formatPlayerInventory(inventory)
