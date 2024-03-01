@@ -52,6 +52,10 @@ AddEventHandler('ox_inventory:updateInventory', function(changes)
         return
     end
 
+    while IsPlayerCamControlDisabled() do
+        Wait(0)
+    end
+
     local typeUpdate = ''
 
     for slot, item in pairs(changes) do
