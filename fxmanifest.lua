@@ -6,7 +6,7 @@ game 'gta5'
 
 author 'Renewed Scripts | FjamZoo'
 description 'Renewed Weaponscarry'
-version '2.5.0'
+version '2.5.1'
 
 shared_scripts {
     '@ox_lib/init.lua',
