@@ -77,6 +77,8 @@ end
 
 local DisableControlAction = DisableControlAction
 local IsEntityPlayingAnim = IsEntityPlayingAnim
+
+local overideanim = playerState.carry_override_anim
 local function carryLoop(itemConfig)
     local dict, anim, flag = itemConfig.dict, itemConfig.anim, itemConfig.flag or 49
 
@@ -87,7 +89,7 @@ local function carryLoop(itemConfig)
     local disableKeys, amount = getDisabledKeys(itemConfig.disableKeys)
 
     while carryingItem do
-        if dict and not IsEntityPlayingAnim(cache.ped, dict, anim, 3) then
+        if dict and not overideanim and not IsEntityPlayingAnim(cache.ped, dict, anim, 3) then
             TaskPlayAnim(cache.ped, dict, anim, 8.0, -8, -1, flag, 0, 0, 0, 0)
         end
 
@@ -153,6 +155,10 @@ AddStateBagChangeHandler('carry_loop', ('player:%s'):format(cache.serverId), fun
     else
         carryingItem = false
     end
+end)
+
+AddStateBagChangeHandler('carry_override_anim', ('player:%s'):format(cache.serverId), function(_, _, value)
+    overideanim = value
 end)
 
 local function updateState(inventory)
