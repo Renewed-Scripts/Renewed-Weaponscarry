@@ -46,9 +46,8 @@ local function itemChanged(slot, item)
     return weaponsConfig[name] and 'weapon' or carryConfig[name] and 'carry' or ''
 end
 
-local loaded = false
 AddEventHandler('ox_inventory:updateInventory', function(changes)
-    if not loaded or not changes then
+    if not changes then
         return
     end
 
@@ -75,26 +74,6 @@ AddEventHandler('ox_inventory:updateInventory', function(changes)
     if carryChanged then
         carryModule.updateCarryState(Inventory)
     end
-end)
-
-
-AddEventHandler('Renewed-Lib:client:PlayerLoaded', function()
-    local items = exports.ox_inventory:GetPlayerItems()
-    weaponModule.updateWeapons(items, {})
-    carryModule.updateCarryState(items)
-
-    SetTimeout(250, function()
-        -- 250ms might be a little too short depending on framework so additional loaded checks
-        while IsPlayerCamControlDisabled() do
-            Wait(0)
-        end
-
-        loaded = true
-    end)
-end)
-
-AddEventHandler('Renewed-Lib:client:PlayerUnloaded', function()
-    loaded = false
 end)
 
 AddEventHandler('onResourceStart', function(resource)
