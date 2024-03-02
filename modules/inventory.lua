@@ -52,22 +52,31 @@ AddEventHandler('ox_inventory:updateInventory', function(changes)
         return
     end
 
-    local typeUpdate = ''
+    -- Sometimes updateInventory sends larger data and we need to check if more than one item has changed
+    local weaponsChanged = false
+    local carryChanged = false
 
     for slot, item in pairs(changes) do
-        if not forceUpdate then
-            typeUpdate = itemChanged(slot, item)
+        local typeUpdate = itemChanged(slot, item)
+
+        if typeUpdate == 'weapon' then
+            weaponsChanged = true
+        elseif typeUpdate == 'carry' then
+            carryChanged = true
         end
 
         Inventory[slot] = item
     end
 
-    if typeUpdate == 'weapon' then
+    if weaponsChanged then
         weaponModule.updateWeapons(Inventory, currentWeapon)
-    elseif typeUpdate == 'carry' then
+    end
+
+    if carryChanged then
         carryModule.updateCarryState(Inventory)
     end
 end)
+
 
 AddEventHandler('Renewed-Lib:client:PlayerLoaded', function()
     local items = exports.ox_inventory:GetPlayerItems()
