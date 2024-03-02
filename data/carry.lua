@@ -17,7 +17,7 @@ return {
     },
 
     -- Used in Renewed-Garbagejob
-    clothing = {
+    trashbag = {
         model = `prop_cs_rub_binbag_01`,
         pos = vec3(0.0, 0.0, 0.0),
         rot = vec3(180.0, 200.0, 80.0),
