@@ -22,9 +22,14 @@ AddEventHandler('ox_inventory:currentWeapon', function(weapon)
             currentWeapon = weapon
             return weaponModule.updateWeapons(Inventory, weapon)
         end
-    elseif currentWeapon and table.type(currentWeapon) ~= 'empty' then
-        table.wipe(currentWeapon)
-        weaponModule.updateWeapons(Inventory, currentWeapon)
+    elseif table.type(currentWeapon) ~= 'empty' then
+        local weaponName = currentWeapon.name:lower()
+
+        currentWeapon = {}
+
+        if weaponsConfig[weaponName] then
+            return weaponModule.updateWeapons(Inventory, {})
+        end
     end
 end)
 
@@ -35,12 +40,17 @@ end)
 --- @return string
 local function itemChanged(slot, item)
     local name = item and item.name:lower()
-    local previousItem = not item and Inventory[slot]
+    local previousItem = Inventory[slot]
 
     if previousItem then
         local prevName = previousItem.name:lower()
 
-        return weaponsConfig[prevName] and 'weapon' or carryConfig[prevName] and 'carry' or ''
+        local wasWeapon = weaponsConfig[prevName]
+        local wasCarry = carryConfig[prevName]
+
+        if wasWeapon or wasCarry then
+            return wasWeapon and 'weapon' or 'carry'
+        end
     end
 
     return weaponsConfig[name] and 'weapon' or carryConfig[name] and 'carry' or ''
@@ -51,27 +61,24 @@ AddEventHandler('ox_inventory:updateInventory', function(changes)
         return
     end
 
-    -- Sometimes updateInventory sends larger data and we need to check if more than one item has changed
-    local weaponsChanged = false
-    local carryChanged = false
+    local updateStates = {
+        weapon = false,
+        carry = false
+    }
 
     for slot, item in pairs(changes) do
         local typeUpdate = itemChanged(slot, item)
 
-        if typeUpdate == 'weapon' then
-            weaponsChanged = true
-        elseif typeUpdate == 'carry' then
-            carryChanged = true
-        end
+        updateStates[typeUpdate] = true
 
         Inventory[slot] = item
     end
 
-    if weaponsChanged then
+    if updateStates.weapon then
         weaponModule.updateWeapons(Inventory, currentWeapon)
     end
 
-    if carryChanged then
+    if updateStates.carry then
         carryModule.updateCarryState(Inventory)
     end
 end)
@@ -79,24 +86,17 @@ end)
 AddEventHandler('onResourceStart', function(resource)
     if resource == GetCurrentResourceName() then
         Wait(100)
-
-        local weaponsCarry = playerState.weapons_carry
-
-        if weaponsCarry and table.type(weaponsCarry) ~= 'empty' then
+        if table.type(playerState.weapons_carry or {}) ~= 'empty' then
             playerState:set('weapons_carry', false, true)
 
             weaponModule.updateWeapons(Inventory, currentWeapon)
         end
 
-        local carryItems = playerState.carry_items
-
-        if carryItems and table.type(carryItems) ~= 'empty' then
+        if table.type(playerState.carry_items or {}) ~= 'empty' then
             playerState:set('carry_items', false, true)
 
             carryModule.updateCarryState(Inventory)
         end
-
-        loaded = true
     end
 end)
 
