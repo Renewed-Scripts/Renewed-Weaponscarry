@@ -9,27 +9,27 @@ local currentWeapon = {}
 
 local hasFlashLight = require 'modules.utils'.hasFlashLight
 AddEventHandler('ox_inventory:currentWeapon', function(weapon)
-    if weapon then
+    if weapon and weapon.name then
         local searchName = weapon.name:lower()
         if weaponsConfig[searchName] then
+            currentWeapon = weapon
 
-            if hasFlashLight(weapon.metadata.components) then
+            if hasFlashLight(currentWeapon.metadata.components) then
                 CreateThread(function()
-                    weaponModule.loopFlashlight(weapon.metadata.serial)
+                    weaponModule.loopFlashlight(currentWeapon.metadata.serial)
                 end)
             end
 
-            currentWeapon = weapon
-            return weaponModule.updateWeapons(Inventory, weapon)
+            return weaponModule.updateWeapons(Inventory, currentWeapon)
         end
-    elseif table.type(currentWeapon) ~= 'empty' then
-        local weaponName = currentWeapon.name:lower()
+    else
+        local weaponName = currentWeapon?.name and currentWeapon.name:lower()
 
-        currentWeapon = {}
-
-        if weaponsConfig[weaponName] then
+        if weaponName and weaponsConfig[weaponName] then
             return weaponModule.updateWeapons(Inventory, {})
         end
+
+        currentWeapon = {}
     end
 end)
 
@@ -37,10 +37,14 @@ end)
 --- Checks if the item in the slot has changed and returns the config for the item
 --- @param slot number
 --- @param item table
---- @return string
+--- @return string | nil
 local function itemChanged(slot, item)
     local name = item and item.name:lower()
     local previousItem = Inventory[slot]
+
+    if not name and not previousItem then
+        return
+    end
 
     if previousItem then
         local prevName = previousItem.name:lower()
@@ -53,9 +57,10 @@ local function itemChanged(slot, item)
         end
     end
 
-    return weaponsConfig[name] and 'weapon' or carryConfig[name] and 'carry' or ''
+    return weaponsConfig[name] and 'weapon' or carryConfig[name] and 'carry'
 end
 
+--- Updates the inventory with the changes
 AddEventHandler('ox_inventory:updateInventory', function(changes)
     if not changes then
         return
@@ -69,9 +74,11 @@ AddEventHandler('ox_inventory:updateInventory', function(changes)
     for slot, item in pairs(changes) do
         local typeUpdate = itemChanged(slot, item)
 
-        updateStates[typeUpdate] = true
+        if typeUpdate and not updateStates[typeUpdate] then
+            updateStates[typeUpdate] = true
+        end
 
-        Inventory[slot] = item
+        Inventory[slot] = item or nil
     end
 
     if updateStates.weapon then
@@ -113,11 +120,14 @@ end)
 
 local function refreshWeapons()
     if playerState.weapons_carry and table.type(playerState.weapons_carry) ~= 'empty' then
+        Inventory = exports.ox_inventory:GetPlayerItems()
+
         playerState:set('weapons_carry', false, true)
 
         weaponModule.updateWeapons(Inventory, currentWeapon)
     end
-end
+end exports("RefreshWeapons", refreshWeapons)
+
 
 AddStateBagChangeHandler('hide_props', ('player:%s'):format(cache.serverId), function(_, _, value)
     if value then
