@@ -4,14 +4,18 @@ local playerState = LocalPlayer.state
 
 local Players = {}
 
-local function removePlayer(playerId)
-    local entity = Players[playerId]
+local function removePlayer(serverId)
+    local entity = Players[serverId]
 
     if entity then
         DeleteObject(entity)
-        Players[playerId] = nil
+        Players[serverId] = nil
     end
 end
+
+RegisterNetEvent('onPlayerDropped', function(serverId)
+    removePlayer(serverId)
+end)
 
 local function formatPlayerInventory(inventory)
     for _, itemData in pairs(inventory) do
@@ -116,14 +120,14 @@ AddStateBagChangeHandler('carry_items', nil, function(bagName, keyName, value, _
         return
     end
 
-    local playerId, pedHandle = Utils.getEntityFromStateBag(bagName, keyName)
+    local serverId, pedHandle = Utils.getEntityFromStateBag(bagName, keyName)
 
-    if playerId and not value then
-        return removePlayer(playerId)
+    if serverId and not value then
+        return removePlayer(serverId)
     end
 
     if pedHandle > 0 then
-        local currentEntity = Players[playerId]
+        local currentEntity = Players[serverId]
         local entity
 
         if currentEntity and DoesEntityExist(currentEntity) then
@@ -138,7 +142,7 @@ AddStateBagChangeHandler('carry_items', nil, function(bagName, keyName, value, _
             end
         end
 
-        Players[playerId] = entity
+        Players[serverId] = entity
     end
 end)
 

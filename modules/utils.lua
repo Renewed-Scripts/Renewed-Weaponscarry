@@ -166,7 +166,7 @@ function Utils.getEntityFromStateBag(bagName, keyName)
             if ped > 0 then return ped end
         end, ('%s received invalid entity! (%s)'):format(keyName, bagName), 10000)
 
-        return playerId, entity
+        return serverId, entity
     end
 
 end

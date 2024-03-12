@@ -6,29 +6,18 @@ local Players = {}
 SetFlashLightKeepOnWhileMoving(true)
 
 ---Removes the current player from the table and deletes the entities
----@param playerId number
-local function removePlayer(playerId)
-    local Player = Players[playerId]
+---@param serverId number
+local function removePlayer(serverId)
+    local Player = Players[serverId]
 
-    if Player and next(Player) then
+    if Player and table.type(Player) ~= 'empty' then
         Utils.removeEntities(Player)
-        Players[playerId] = nil
+        Players[serverId] = nil
     end
 end
 
-CreateThread(function()
-    local NetworkIsPlayerActive = NetworkIsPlayerActive
-
-    while true do
-        for playerId, weapons in pairs(Players) do
-
-            if weapons and next(weapons) and not NetworkIsPlayerActive(playerId) then
-                removePlayer(playerId)
-            end
-        end
-
-        Wait(2000)
-    end
+RegisterNetEvent('onPlayerDropped', function(serverId)
+    removePlayer(serverId)
 end)
 
 ---Formats the players inventory to only have items that are in the config
@@ -88,14 +77,14 @@ AddStateBagChangeHandler('weapons_carry', nil, function(bagName, keyName, value,
         return
     end
 
-    local playerId, pedHandle = Utils.getEntityFromStateBag(bagName, keyName)
+    local serverId, pedHandle = Utils.getEntityFromStateBag(bagName, keyName)
 
-    if playerId and not value then
-        return removePlayer(playerId)
+    if serverId and not value then
+        return removePlayer(serverId)
     end
 
     if pedHandle > 0 then
-        local currentTable = Players[playerId] or {}
+        local currentTable = Players[serverId] or {}
         local amount = #currentTable
 
         if amount > 0 then
@@ -108,7 +97,7 @@ AddStateBagChangeHandler('weapons_carry', nil, function(bagName, keyName, value,
             createAllObjects(pedHandle, value, currentTable, amount)
         end
 
-        Players[playerId] = currentTable
+        Players[serverId] = currentTable
     end
 end)
 
