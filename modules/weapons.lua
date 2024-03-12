@@ -41,6 +41,12 @@ local function formatPlayerInventory(inventory, currentWeapon)
 
     Utils.resetSlots()
 
+    if amount > 1 then
+        table.sort(items, function(a, b)
+            return a.serial < b.serial
+        end)
+    end
+
     return items
 end
 
@@ -107,14 +113,13 @@ local playerState = LocalPlayer.state
 ---@param inventory table
 ---@param currentWeapon table
 local function updateState(inventory, currentWeapon)
-
     while playerState.weapons_carry == nil do
         Wait(0)
     end
 
     local items = formatPlayerInventory(inventory, currentWeapon)
 
-    if not playerState.hide_props and not lib.table.matches(items, playerState.weapons_carry) then
+    if not playerState.hide_props and not lib.table.matches(items, playerState.weapons_carry or {}) then
         playerState:set('weapons_carry', items, true)
     end
 end

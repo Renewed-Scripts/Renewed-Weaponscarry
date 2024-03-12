@@ -1,7 +1,6 @@
 local weaponModule = require 'modules.weapons'
 local carryModule = require 'modules.carry'
 local weaponsConfig = require 'data.weapons'
-local carryConfig = require 'data.carry'
 
 local Inventory = exports.ox_inventory:GetPlayerItems() or {}
 local playerState = LocalPlayer.state
@@ -33,61 +32,18 @@ AddEventHandler('ox_inventory:currentWeapon', function(weapon)
     end
 end)
 
-
---- Checks if the item in the slot has changed and returns the config for the item
---- @param slot number
---- @param item table
---- @return string | nil
-local function itemChanged(slot, item)
-    local name = item and item.name:lower()
-    local previousItem = Inventory[slot]
-
-    if not name and not previousItem then
-        return
-    end
-
-    if previousItem then
-        local prevName = previousItem.name:lower()
-
-        local wasWeapon = weaponsConfig[prevName]
-        local wasCarry = carryConfig[prevName]
-
-        if wasWeapon or wasCarry then
-            return wasWeapon and 'weapon' or 'carry'
-        end
-    end
-
-    return weaponsConfig[name] and 'weapon' or carryConfig[name] and 'carry'
-end
-
 --- Updates the inventory with the changes
 AddEventHandler('ox_inventory:updateInventory', function(changes)
     if not changes then
         return
     end
 
-    local updateStates = {
-        weapon = false,
-        carry = false
-    }
-
     for slot, item in pairs(changes) do
-        local typeUpdate = itemChanged(slot, item)
-
-        if typeUpdate and not updateStates[typeUpdate] then
-            updateStates[typeUpdate] = true
-        end
-
-        Inventory[slot] = item or nil
+        Inventory[slot] = item
     end
 
-    if updateStates.weapon then
-        weaponModule.updateWeapons(Inventory, currentWeapon)
-    end
-
-    if updateStates.carry then
-        carryModule.updateCarryState(Inventory)
-    end
+    weaponModule.updateWeapons(Inventory, currentWeapon)
+    carryModule.updateCarryState(Inventory)
 end)
 
 AddEventHandler('onResourceStart', function(resource)

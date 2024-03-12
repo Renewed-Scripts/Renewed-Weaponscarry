@@ -138,7 +138,7 @@ function Utils.formatData(itemData, itemConfig, ignoreSlot)
         hash = isWeapon and itemConfig.hash or joaat(itemData.name),
         components = isWeapon and itemData?.metadata?.components,
         tint = isWeapon and itemData?.metadata?.tint,
-        serial = isWeapon and itemData?.metadata?.serial,
+        serial = isWeapon and itemData?.metadata?.serial or 'unknown',
         model = itemConfig.model,
         pos = itemConfig.pos or slot?.pos,
         rot = itemConfig.rot or slot?.rot,
