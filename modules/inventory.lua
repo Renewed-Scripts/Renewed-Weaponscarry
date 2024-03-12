@@ -39,6 +39,12 @@ AddEventHandler('ox_inventory:updateInventory', function(changes)
     end
 
     for slot, item in pairs(changes) do
+        local oldSlot = Inventory[slot]
+
+        if oldSlot and oldSlot.name == currentWeapon?.name then
+            currentWeapon = exports.ox_inventory:getCurrentWeapon() or {}
+        end
+
         Inventory[slot] = item
     end
 
