@@ -138,14 +138,14 @@ end)
 ---@param items table
 ---@param weapon table | nil
 local function refreshProps(items, weapon)
-    if Players[cache.playerId] then
-        Utils.removeEntities(Players[cache.playerId])
+    if Players[cache.serverId] then
+        Utils.removeEntities(Players[cache.serverId])
 
-        table.wipe(Players[cache.playerId])
+        table.wipe(Players[cache.serverId])
 
         local Items = formatPlayerInventory(items, weapon)
 
-        createAllObjects(cache.ped, Items, Players[cache.playerId], 0)
+        createAllObjects(cache.ped, Items, Players[cache.serverId], 0)
     end
 end
 
