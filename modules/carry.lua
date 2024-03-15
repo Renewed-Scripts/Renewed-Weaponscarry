@@ -47,6 +47,13 @@ local disableAttacks = {
     143 -- disable melee
 }
 
+local disableDriving = {
+    63, -- A
+    64, -- D
+    71, -- W
+    72 -- S
+}
+
 local function getDisabledKeys(disabledKeys)
     local keys = {}
     local amount = 0
@@ -69,9 +76,16 @@ local function getDisabledKeys(disabledKeys)
             keys[amount] = 21
         end
 
-        if disabledKeys.disableVehicle then
+        if disabledKeys.disableVehicleEnter then
             amount += 1
             keys[amount] = 23
+        end
+
+        if disabledKeys.disableDriving then
+            for i = 1, #disableDriving do
+                amount += 1
+                keys[amount] = disableDriving[i]
+            end
         end
     end
 
@@ -85,6 +99,8 @@ local IsEntityPlayingAnim = IsEntityPlayingAnim
 local overideanim = playerState.carry_override_anim
 local function carryLoop(itemConfig)
     local dict, anim, flag = itemConfig.dict, itemConfig.anim, itemConfig.flag or 49
+
+    local slowerWalk = itemConfig.slowMovement and 1.0 - (itemConfig.slowMovement / 100)
 
     if dict then
         lib.requestAnimDict(dict)
@@ -101,6 +117,10 @@ local function carryLoop(itemConfig)
             for i = 1, amount do
                 DisableControlAction(0, disableKeys[i], true)
             end
+        end
+
+        if slowerWalk then
+            SetPedMoveRateOverride(cache.ped, slowerWalk)
         end
 
         Wait(0)

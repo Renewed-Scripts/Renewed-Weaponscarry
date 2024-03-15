@@ -2,6 +2,7 @@ return {
 
     -- Used in Renewed-Fuel
     oilbarrel = {
+        slowMovement = 10, -- Slow playermovement by percentage, 100 = cant walk, 0 = normal speed. (recommend 10-20)
         model = `prop_barrel_exp_01a`,
         pos = vec3(0.01, -0.27, 0.27),
         rot = vec3(3.0, 0.0, 0.0),
@@ -12,9 +13,11 @@ return {
             disableSprint = true,
             disableJump = true,
             disableAttack = true,
-            disableVehicle = true
+            disableDriving = true,
+            disableVehicleEnter = true
         }
     },
+
 
     -- Used in Renewed-Garbagejob
     trashbag = {
