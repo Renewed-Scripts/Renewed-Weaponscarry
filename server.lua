@@ -1,3 +1,5 @@
+lib.versionCheck('Renewed-Scripts/Renewed-Lib')
+
 -- Intiate the statebag for the player
 AddEventHandler('Renewed-Lib:server:playerRemoved', function(source)
     local playerState = Player(source).state
