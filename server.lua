@@ -1,4 +1,4 @@
-lib.versionCheck('Renewed-Scripts/Renewed-Lib')
+lib.versionCheck('Renewed-Scripts/Renewed-Weaponscarry')
 
 -- Intiate the statebag for the player
 AddEventHandler('Renewed-Lib:server:playerRemoved', function(source)
