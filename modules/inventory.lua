@@ -47,7 +47,7 @@ AddEventHandler('ox_inventory:updateInventory', function(changes)
 end)
 
 AddEventHandler('onResourceStart', function(resource)
-    if resource == GetCurrentResourceName() then
+    if resource == cache.resource then
         Wait(100)
         if table.type(playerState.weapons_carry or {}) ~= 'empty' then
             playerState:set('weapons_carry', false, true)
