@@ -81,7 +81,7 @@ local function addVehicleStateBag(name)
 end
 
 AddEventHandler('onResourceStop', function(resource)
-    if resource == GetCurrentResourceName() then
+    if resource == cache.resource then
 
         for bagname, _ in pairs(Vehicles) do
             if Vehicles[bagname] and table.type(Vehicles[bagname]) ~= 'empty' then

@@ -125,7 +125,7 @@ local function updateState(inventory, currentWeapon)
 end
 
 AddEventHandler('onResourceStop', function(resource)
-    if resource == GetCurrentResourceName() then
+    if resource == cache.resource then
         for _, v in pairs(Players) do
             if v then
                 Utils.removeEntities(v)
