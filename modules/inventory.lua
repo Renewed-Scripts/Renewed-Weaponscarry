@@ -1,6 +1,7 @@
 local weaponModule = require 'modules.weapons'
 local carryModule = require 'modules.carry'
 local weaponsConfig = require 'data.weapons'
+local Utils = require 'modules.utils'
 
 local Inventory = exports.ox_inventory:GetPlayerItems() or {}
 local playerState = LocalPlayer.state
@@ -32,22 +33,66 @@ AddEventHandler('ox_inventory:currentWeapon', function(weapon)
     end
 end)
 
---- Updates the inventory with the changes
 AddEventHandler('ox_inventory:updateInventory', function(changes)
-    if not changes then
-        return
-    end
+    if not changes then return end
+
+    local removedWeapons = {}
+    local currentWeaponsState = playerState.weapons_carry or {}
 
     for slot, item in pairs(changes) do
-        Inventory[slot] = item
+        if item == false then
+            if Inventory[slot] and type(Inventory[slot]) == "table" and Inventory[slot].type == 'weapon' then
+                local wasAttached = false
+                for _, attachedWeapon in ipairs(currentWeaponsState) do
+                    if attachedWeapon.name == Inventory[slot].name then
+                        wasAttached = true
+                        break
+                    end
+                end
+                
+                if wasAttached then
+                    Utils.resetSlots()
+                    playerState:set('weapons_carry', false, true)
+                    Wait(0)
+                else
+                    table.insert(removedWeapons, Inventory[slot].name)
+                end
+            end
+            Inventory[slot] = nil
+        elseif type(item) == "table" then
+            Inventory[slot] = item
+        end
+    end
+
+    if #removedWeapons > 0 then
+        for _, weaponName in ipairs(removedWeapons) do
+            weaponModule.removeWeaponAttachment(weaponName)
+        end
+    end
+
+    local hasWeapons = false
+    for _, item in pairs(Inventory) do
+        if item and type(item) == "table" and item.type == 'weapon' then
+            hasWeapons = true
+            break
+        end
+    end
+
+    if playerState.weapons_carry ~= hasWeapons then
+        playerState:set('weapons_carry', hasWeapons, true)
     end
 
     weaponModule.updateWeapons(Inventory, currentWeapon)
     carryModule.updateCarryState(Inventory)
 end)
 
+
+
+
+
+
 AddEventHandler('onResourceStart', function(resource)
-    if resource == cache.resource then
+    if resource == GetCurrentResourceName() then
         Wait(100)
         if table.type(playerState.weapons_carry or {}) ~= 'empty' then
             playerState:set('weapons_carry', false, true)
@@ -128,3 +173,15 @@ AddStateBagChangeHandler('instance', ('player:%s'):format(cache.serverId), funct
         end
     end
 end)
+
+local function updateState(inventory, currentWeapon)
+    while playerState.weapons_carry == nil do
+        Wait(0)
+    end
+
+    local items = formatPlayerInventory(inventory, currentWeapon)
+
+    playerState:set('weapons_carry', false, true)
+    Wait(0)
+    playerState:set('weapons_carry', items, true)
+end

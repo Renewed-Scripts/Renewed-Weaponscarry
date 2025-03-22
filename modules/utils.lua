@@ -17,6 +17,10 @@ local playerSlots = {
 		{ bone = 24817, pos = vec3(-0.28, -0.14, 0.15), rot = vec3(0.0, 92.0, -13.0) },
 		{ bone = 24817, pos = vec3(-0.27, -0.14, 0.15), rot = vec3(0.0, 92.0, 13.0) },
 	},
+
+    { -- Pistol Thigh
+		{ bone = 51826, pos = vec3(0.038041, 0.068614, 0.091040), rot = vec3(-124.852936, 5.241456, -2.311053) },
+    },
 }
 
 function Utils.resetSlots()
@@ -124,14 +128,17 @@ function Utils.findOpenSlot(tier)
             end
         end
 
-        return slotTier[slotAmount]
+        return nil
     end
 end
 
 function Utils.formatData(itemData, itemConfig, ignoreSlot)
     local isWeapon = itemData.name:find('WEAPON_')
-
     local slot = not ignoreSlot and itemConfig.slot and Utils.findOpenSlot(itemConfig.slot)
+    
+    if not ignoreSlot and itemConfig.slot and not slot then
+        return nil
+    end
 
     return {
         name = itemData.name,
@@ -218,7 +225,7 @@ local function createWeapon(item)
 
         if Utils.checkFlashState(item) then
             SetCreateWeaponObjectLightSource(weaponObject, true)
-            Wait(0) -- We need to skip a frame before attaching the object for the lightsource to be created
+            Wait(0) 
         end
 
         if hasLuxeMod then
@@ -244,4 +251,17 @@ function Utils.getEntity(payload)
 end
 
 
-return Utils
+return {
+    resetSlots = Utils.resetSlots,
+    removeEntities = Utils.removeEntities,
+    hasFlashLight = Utils.hasFlashLight,
+    checkFlashState = Utils.checkFlashState,
+    hasVarMod = Utils.hasVarMod,
+    getWeaponComponents = Utils.getWeaponComponents,
+    findOpenSlot = Utils.findOpenSlot,
+    formatData = Utils.formatData,
+    getEntityFromStateBag = Utils.getEntityFromStateBag,
+    AttachEntityToPlayer = Utils.AttachEntityToPlayer,
+    getEntity = Utils.getEntity,
+    playerSlots = playerSlots
+}
