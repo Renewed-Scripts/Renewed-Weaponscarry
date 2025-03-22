@@ -10,12 +10,12 @@ return {
         slot = 3,
     },
 
-    -- custom weapons tier 1
-    weapon_assaultrifle = {
+    -- Custom Weapons Tier 1
+    weapon_assaultrifle  = {
         slot = 1,
     },
 
-    weapon_carbinerifle = {
+    weapon_carbinerifle  = {
         slot = 1,
     },
 
@@ -40,93 +40,15 @@ return {
     },
 
     weapon_pistol = {
-        slot = 4,
+        slot = 1,
     },
 
-    weapon_heavypistol = {
-        slot = 4,
-    },
-
-    weapon_snspistol = {
-        slot = 4,
-    },
-    
-    weapon_vintagepistol = {
-        slot = 4,
-    },
-    
-    weapon_pistol50 = {
-        slot = 4,
-    },
-    
-    weapon_glock18c = {
-        slot = 4,
-    },
-    
-    weapon_glock22 = {
-        slot = 4,
-    },
-    
-    weapon_de = {
-        slot = 4,
-    },
-    
-    weapon_m1911 = {
-        slot = 4,
-    },
-    
-    weapon_fnx45 = {
-        slot = 4,
-    },
-    
-    weapon_m9 = {
-        slot = 4,
-    },
-    
-    weapon_uzi = {
-        slot = 4,
-    },
-    
-    weapon_mac10 = {
-        slot = 4,
-    },
-    
-    weapon_remington = {
-        slot = 1,
-    },
-    
-    weapon_mossberg = {
-        slot = 1,
-    },
-    
-    weapon_mossberg = {
-        slot = 1,
-    },
-    
-    weapon_mp9 = {
-        slot = 1,
-    },
-    
-    weapon_aks74 = {
-        slot = 1,
-    },
-    
-    weapon_mp5 = {
-        slot = 1,
-    },
-    
-    weapon_mossberg = {
-        slot = 1,
-    },
-    
-    
-    
     -- tier2
     weapon_bats = {
         slot = 2,
     },
 
-    weapon_golfclub = {
+    weapon_golfclub  = {
         slot = 2,
     },
 
@@ -141,37 +63,4 @@ return {
     weapon_wrench = {
         slot = 2,
     },
-
-    weapon_sledgehammer = {
-        slot = 2,
-    },
-
-    weapon_katana = {
-        slot = 2,
-    },
-    
-    weapon_m110 = {
-        slot = 1,
-    },
-    
-    weapon_hk416 = {
-        slot = 1,
-    },
-    
-    weapon_ak47 = {
-        slot = 1,
-    },
-    
-    weapon_ak74 = {
-        slot = 1,
-    },
-
-    weapon_beanbag = {
-        slot = 1,
-    },
-    
-    weapon_perforator = {
-        slot = 2,
-    },
-    
 }
