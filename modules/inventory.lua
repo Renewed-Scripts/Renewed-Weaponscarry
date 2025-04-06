@@ -97,6 +97,7 @@ AddStateBagChangeHandler('hide_props', ('player:%s'):format(cache.serverId), fun
 
         if carryItems and table.type(carryItems) ~= 'empty' then
             playerState:set('carry_items', false, true)
+            playerState:set('carry_loop', false, true)
         end
     else
         CreateThread(function()
