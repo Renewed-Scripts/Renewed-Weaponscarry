@@ -1,11 +1,11 @@
 local Config = require 'data.weapons'
 local Utils = require 'modules.utils'
+local playerSlots = Utils.playerSlots
 
 local Players = {}
 
 SetFlashLightKeepOnWhileMoving(true)
 
----Removes the current player from the table and deletes the entities
 ---@param serverId number
 local function removePlayer(serverId)
     local Player = Players[serverId]
@@ -20,22 +20,35 @@ RegisterNetEvent('onPlayerDropped', function(serverId)
     removePlayer(serverId)
 end)
 
----Formats the players inventory to only have items that are in the config
 ---@param inventory table
 ---@param currentWeapon table | nil
 ---@return table
 local function formatPlayerInventory(inventory, currentWeapon)
     local items = {}
     local amount = 0
+    local usedSlots = {}
+    local playerSlots = Utils.playerSlots
 
     for _, itemData in pairs(inventory) do
         local name = itemData and itemData.name:lower()
+        if name and Config[name] then
+            local slotType = Config[name].slot
+            usedSlots[slotType] = usedSlots[slotType] or 0
+        end
+    end
 
+    for _, itemData in pairs(inventory) do
+        local name = itemData and itemData.name:lower()
+        
         if currentWeapon and itemData and currentWeapon.name == itemData.name and lib.table.matches(itemData.metadata.components, currentWeapon.metadata.components) then
             currentWeapon = nil
         elseif name and Config[name] then
-            amount += 1
-            items[amount] = Utils.formatData(itemData, Config[name])
+            local slotType = Config[name].slot
+            if playerSlots[slotType] and usedSlots[slotType] < #playerSlots[slotType] then
+                amount += 1
+                items[amount] = Utils.formatData(itemData, Config[name])
+                usedSlots[slotType] += 1
+            end
         end
     end
 
@@ -43,14 +56,19 @@ local function formatPlayerInventory(inventory, currentWeapon)
 
     if amount > 1 then
         table.sort(items, function(a, b)
-            return a.serial < b.serial
+            if not a or not b or not a.slot or not b.slot then return false end
+            return a.slot < b.slot
         end)
     end
 
     return items
 end
 
----Creates all the objects for the player
+
+
+
+
+
 ---@param pedHandle number
 ---@param addItems table
 ---@param currentTable table
@@ -109,7 +127,6 @@ end)
 
 local playerState = LocalPlayer.state
 
----Updates the weapons_carry state for the player
 ---@param inventory table
 ---@param currentWeapon table
 local function updateState(inventory, currentWeapon)
@@ -125,7 +142,7 @@ local function updateState(inventory, currentWeapon)
 end
 
 AddEventHandler('onResourceStop', function(resource)
-    if resource == cache.resource then
+    if resource == GetCurrentResourceName() then
         for _, v in pairs(Players) do
             if v then
                 Utils.removeEntities(v)
@@ -134,7 +151,6 @@ AddEventHandler('onResourceStop', function(resource)
     end
 end)
 
---- Refreshes the props for the player to make sure no clipping issues when going in/out of instances
 ---@param items table
 ---@param weapon table | nil
 local function refreshProps(items, weapon)
@@ -149,10 +165,9 @@ local function refreshProps(items, weapon)
     end
 end
 
---- Loops the current flashlight to keep it enabled while the player is not aiming
 ---@param serial string
 local function flashLightLoop(serial)
-    serial = serial or 'scratched' -- Adds support for Scratched serial numbers if they removed it
+    serial = serial or 'scratched' 
 
     local flashState = playerState.flashState?[serial]
 
