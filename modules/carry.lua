@@ -193,7 +193,7 @@ local function updateState(inventory)
 
     local carryItem, itemConfig = formatPlayerInventory(inventory)
 
-    if not lib.table.matches(playerState.carry_items or {}, carryItem) then
+    if not playerState.hide_props and not lib.table.matches(playerState.carry_items or {}, carryItem) then
         playerState:set('carry_items', carryItem, true)
 
         if itemConfig.dict or itemConfig.disableKeys then

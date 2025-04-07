@@ -92,9 +92,17 @@ AddStateBagChangeHandler('hide_props', ('player:%s'):format(cache.serverId), fun
         if items and table.type(items) ~= 'empty' then
             playerState:set('weapons_carry', false, true)
         end
+
+        local carryItems = playerState.carry_items
+
+        if carryItems and table.type(carryItems) ~= 'empty' then
+            playerState:set('carry_items', false, true)
+            playerState:set('carry_loop', false, true)
+        end
     else
         CreateThread(function()
             weaponModule.updateWeapons(Inventory, currentWeapon)
+            carryModule.updateCarryState(Inventory)
         end)
     end
 end)
